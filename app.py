@@ -93,7 +93,7 @@ def get_skill_by_index(index):
         return jsonify({"error": "Skill not found"}), 404
     
 
-@app.route('resume/skill/<int:index>', methods=['DELETE'])
+@app.route('/resume/skill/<int:index>', methods=['DELETE'])
 def delete_skill(index):
     if 0 <= index < len(data["skill"]):
         data["skill"].pop(index)
