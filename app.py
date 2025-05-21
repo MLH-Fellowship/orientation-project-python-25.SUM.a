@@ -129,5 +129,27 @@ def skill():
 
     if request.method == 'POST':
         return jsonify({})
+        
 
     return jsonify({})
+
+
+@app.route('/resume/skill/<int:index>', methods=['GET'])
+def get_skill_by_index(index):
+    """
+    Get a specific skill by index
+    """
+    try:
+        skill_index = data['skill'][index]
+        return jsonify(skill_index), 200
+    except IndexError:
+        return jsonify({"error": "Skill not found"}), 404
+    
+
+@app.route('/resume/skill/<int:index>', methods=['DELETE'])
+def delete_skill(index):
+    if 0 <= index < len(data["skill"]):
+        data["skill"].pop(index)
+        return jsonify({"message": "Successfully deleted skill"}), 200
+    
+    return jsonify({"error": "Skill not found"})
