@@ -89,6 +89,7 @@ def test_add_skill_invalid():
 
     response = app.test_client().post("/resume/skill", json=example_skill)
     assert response.status_code == 400
+    assert response.json["error"] == "Logo is required."
 
 
 def test_add_skill_missing_name():
@@ -99,6 +100,7 @@ def test_add_skill_missing_name():
 
     response = app.test_client().post("/resume/skill", json=example_skill)
     assert response.status_code == 400
+    assert response.json["error"] == "Name is required."
 
 
 def test_add_skill_missing_proficiency():
@@ -109,6 +111,7 @@ def test_add_skill_missing_proficiency():
 
     response = app.test_client().post("/resume/skill", json=example_skill)
     assert response.status_code == 400
+    assert response.json["error"] == "Proficiency is required."
 
 
 def test_add_skill_missing_logo():
@@ -119,3 +122,4 @@ def test_add_skill_missing_logo():
 
     response = app.test_client().post("/resume/skill", json=example_skill)
     assert response.status_code == 400
+    assert response.json["error"] == "Logo is required."
