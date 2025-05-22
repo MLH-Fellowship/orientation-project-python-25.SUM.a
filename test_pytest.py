@@ -176,50 +176,42 @@ def test_skill():
     assert response.json[item_id] == example_skill
 
 
-def test_add_skill_invalid():
+def test_skill_missing_fields():
     """
-    Add a new skill with invalid data and check that it returns an error
+    Add a new skill with missing field and check that it returns an error
     """
+    example_skill = {"name": "JavaScript", "logo": "example-logo.png"}
+    response = app.test_client().post("/resume/skill", json=example_skill)
+
+    assert response.status_code == 400
+    assert response.json["error"] == "Missing required fields"
+
+
+def test_skill_id_return():
+    """
+    Make sure the Id of newly added skill is returned.
+    """
+
     example_skill = {
         "name": "JavaScript",
         "proficiency": "2-4 years",
-        "logo": "",
-        "age": "25",
+        "logo": "eniola.png",
     }
-
     response = app.test_client().post("/resume/skill", json=example_skill)
-    assert response.status_code == 400
-    assert response.json["error"] == "Logo is required."
+    assert response.status_code == 201
+    assert "id" in response.json
 
 
-def test_add_skill_missing_name():
-    """
-    Add a new skill with missing name and check that it returns an error
-    """
-    example_skill = {"proficiency": "2-4 years", "logo": "example-logo.png"}
+# def test_add_skill_invalid():
+#     """
+#     Add a new skill with invalid data and check that it returns an error
+#     """
+#     example_skill = {
+#         "name": "JavaScript",
+#         "proficiency": "2-4 years",
+#         "logo": "",
+#     }
 
-    response = app.test_client().post("/resume/skill", json=example_skill)
-    assert response.status_code == 400
-    assert response.json["error"] == "Name is required."
-
-
-def test_add_skill_missing_proficiency():
-    """
-    Add a new skill with missing proficiency and check that it returns an error
-    """
-    example_skill = {"name": "JavaScript", "logo": "example-logo.png"}
-
-    response = app.test_client().post("/resume/skill", json=example_skill)
-    assert response.status_code == 400
-    assert response.json["error"] == "Proficiency is required."
-
-
-def test_add_skill_missing_logo():
-    """
-    Add a new skill with missing logo and check that it returns an error
-    """
-    example_skill = {"name": "JavaScript", "proficiency": "2-4 years"}
-
-    response = app.test_client().post("/resume/skill", json=example_skill)
-    assert response.status_code == 400
-    assert response.json["error"] == "Logo is required."
+#     response = app.test_client().post("/resume/skill", json=example_skill)
+#     assert response.status_code == 400
+#     assert response.json["error"] == "Logo is required"

@@ -132,18 +132,20 @@ def delete_education(index):
 @app.route("/resume/skill", methods=["GET", "POST"])
 def skill():
     """
-    Handles Skill requests
+    This handles GET and POST request for skills:
+
+    GET: Retrieves all skills
+    POST: Adds a new skill and returns the index of the current skill
     """
     if request.method == "GET":
         return jsonify(data["skill"])
 
     if request.method == "POST":
-        if "name" not in request.json or not request.json["name"]:
-            return jsonify({"error": "Name is required"}), 400
-        if "proficiency" not in request.json or not request.json["proficiency"]:
-            return jsonify({"error": "Proficiency is required"}), 400
-        if "logo" not in request.json or not request.json["logo"]:
-            return jsonify({"error": "Logo is required"}), 400
+        experience_data = request.get_json()
+
+        if not all(key in experience_data for key in ["name", "proficiency", "logo"]):
+            return jsonify({"error": "Missing required fields"}), 400
+
         data["skill"].append(
             Skill(
                 request.json["name"], request.json["proficiency"], request.json["logo"]
@@ -151,4 +153,11 @@ def skill():
         )
         return jsonify({"id": len(data["skill"]) - 1}), 201
 
-    return jsonify({})
+    return jsonify({"error": "Method not allowed"}), 405
+
+
+if __name__ == "__main__":
+    app.run()
+
+
+# how do i check for the logo format validity as an image and return a message if the formate is not valid, how do I also add a cap on size.
