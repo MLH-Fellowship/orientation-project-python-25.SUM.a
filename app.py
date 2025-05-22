@@ -160,4 +160,3 @@ if __name__ == "__main__":
     app.run()
 
 
-# how do i check for the logo format validity as an image and return a message if the formate is not valid, how do I also add a cap on size.

@@ -189,7 +189,7 @@ def test_skill_missing_fields():
 
 def test_skill_id_return():
     """
-    Make sure the Id of newly added skill is returned.
+    Make sure the id of newly added skill is returned.
     """
 
     example_skill = {
@@ -200,18 +200,3 @@ def test_skill_id_return():
     response = app.test_client().post("/resume/skill", json=example_skill)
     assert response.status_code == 201
     assert "id" in response.json
-
-
-# def test_add_skill_invalid():
-#     """
-#     Add a new skill with invalid data and check that it returns an error
-#     """
-#     example_skill = {
-#         "name": "JavaScript",
-#         "proficiency": "2-4 years",
-#         "logo": "",
-#     }
-
-#     response = app.test_client().post("/resume/skill", json=example_skill)
-#     assert response.status_code == 400
-#     assert response.json["error"] == "Logo is required"
