@@ -100,6 +100,9 @@ def education():
             is_valid, error_message = validate_data('education', education_data)
             if not is_valid:
                 return jsonify({"error": error_message}), 400
+            # TODO: Create new Education object with education_data
+            # TODO: Append new education to data['education']
+            # TODO: Return jsonify({"id": len(data['education']) - 1}), 201
             return jsonify({}), 201
         except (TypeError, ValueError, KeyError):
             return jsonify({"error": "Invalid data format"}), 400
@@ -143,6 +146,9 @@ def skill():
             is_valid, error_message = validate_data('skill', skill_data)
             if not is_valid:
                 return jsonify({"error": error_message}), 400
+            # TODO: Create new Skill object with skill_data
+            # TODO: Append new skill to data['skill']
+            # TODO: Return jsonify({"id": len(data['skill']) - 1}), 201
             return jsonify({}), 201
         except (TypeError, ValueError, KeyError):
             return jsonify({"error": "Invalid data format"}), 400
