@@ -203,8 +203,8 @@ def test_delete_education():
 
     # Delete again to check if it fails:
     del_resp = client.delete(f'/resume/education/{item_id}')
-    assert del_resp.status_code == 404
-    assert del_resp.json['error'] == "Index out of range"
+    assert del_resp.status_code == 400
+    assert del_resp.json['error'] == "400 Bad Request"
 
 
 def test_skill():

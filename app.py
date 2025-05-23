@@ -114,7 +114,7 @@ def education_by_index(index):
         if 0 <= index < len(data["education"]):
             data["education"].pop(index)
             return jsonify({"message": "Education has been deleted"}), 200
-        return jsonify({"error": "Index out of range"}), 404
+        return jsonify({"error": "400 Bad Request"}), 400
     return jsonify({"error": "Method not allowed"}), 405
 
 
