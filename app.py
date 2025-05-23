@@ -92,31 +92,30 @@ def education():
         return jsonify(data['education']), 200
 
     if request.method == 'POST':
-        return jsonify({})
+        return jsonify({}), 201
 
     return jsonify({})
 
-
-@app.route('/resume/education/<int:index>', methods=['DELETE'])
-def delete_education(index):
-    """
-    Deletes an education entry at the specified index.
-
-    Parameters
-    ----------
-    index : int
-        The index of the education entry to delete.
-
-    Returns
-    -------
-    Response
-        JSON response indicating success (with `deleted: True`) or
-        failure (with an error message and 404 status code).
-    """
-    if 0 <= index < len( data[ "education" ] ):
-        data[ "education" ].pop( index )
-        return jsonify( { "message": "Education has been deleted" } ), 200
-    return jsonify( { "error": "Index out of range" } ), 404
+@app.route('/resume/education/<int:index>', methods=['GET', 'DELETE'])
+def education_by_index(index):
+    '''
+    Handles education requests by index
+    This function handles two types of HTTP requests:
+    - GET: Retrieves a specific education by index
+    - DELETE: Deletes a specific education by index
+    '''
+    if request.method == 'GET':
+        try:
+            education_item = data['education'][index]
+            return jsonify(education_item)
+        except IndexError:
+            return jsonify({"error": "Education not found"}), 404
+    
+    if request.method == 'DELETE':
+        if 0 <= index < len(data["education"]):
+            data["education"].pop(index)
+            return jsonify({"message": "Education has been deleted"}), 200
+        return jsonify({"error": "Index out of range"}), 404
 
 
 @app.route('/resume/skill', methods=['GET', 'POST'])
