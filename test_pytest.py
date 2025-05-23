@@ -177,13 +177,11 @@ def test_invalid_input_validation():
     Test that the API properly validates input data for POST requests
     '''
     client = app.test_client()
-    
     # Test invalid experience
     invalid_experience = {
         "title": "Software Developer",
         # Missing required fields
     }
-    
     response = client.post('/resume/experience', json=invalid_experience)
     assert response.status_code == 400
     assert "error" in response.json
@@ -193,13 +191,11 @@ def test_invalid_input_validation():
     assert "end_date" in response.json["error"]
     assert "description" in response.json["error"]
     assert "logo" in response.json["error"]
-    
     # Test invalid education
     invalid_education = {
         "course": "Computer Science",
         # Missing required fields
     }
-    
     response = client.post('/resume/education', json=invalid_education)
     assert response.status_code == 400
     assert "error" in response.json
@@ -209,22 +205,17 @@ def test_invalid_input_validation():
     assert "end_date" in response.json["error"]
     assert "grade" in response.json["error"]
     assert "logo" in response.json["error"]
-    
     # Test invalid skill
     invalid_skill = {
         "name": "Python",
         # Missing required fields
     }
-    
     response = client.post('/resume/skill', json=invalid_skill)
     assert response.status_code == 400
     assert "error" in response.json
     assert "Missing required fields" in response.json["error"]
     assert "proficiency" in response.json["error"]
     assert "logo" in response.json["error"]
-    
     # Test invalid data format
     response = client.post('/resume/experience', data="not json")
-    assert response.status_code == 400
-    assert "error" in response.json
-    assert "Invalid data format" in response.json["error"]
+    assert response.status_code == 415

@@ -27,12 +27,9 @@ def validate_data(data_type, data):
     '''
     if data is None:
         return False, "Invalid data format"
-        
     if not isinstance(data, dict):
         return False, "Invalid data format"
-        
     missing_fields = [field for field in REQUIRED_FIELDS[data_type] if field not in data]
     if missing_fields:
         return False, f"Missing required fields: {', '.join(missing_fields)}"
-    
-    return True, None 
+    return True, None

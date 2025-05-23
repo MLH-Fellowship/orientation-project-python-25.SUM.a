@@ -68,7 +68,7 @@ def experience():
             )
             data['experience'].append(new_experience)
             return jsonify({"id": len(data['experience']) - 1}), 201
-        except Exception:
+        except (TypeError, ValueError, KeyError):
             return jsonify({"error": "Invalid data format"}), 400
 
     return jsonify({"error": "Method not allowed"}), 405
@@ -101,7 +101,7 @@ def education():
             if not is_valid:
                 return jsonify({"error": error_message}), 400
             return jsonify({}), 201
-        except Exception:
+        except (TypeError, ValueError, KeyError):
             return jsonify({"error": "Invalid data format"}), 400
 
     return jsonify({})
@@ -144,7 +144,7 @@ def skill():
             if not is_valid:
                 return jsonify({"error": error_message}), 400
             return jsonify({}), 201
-        except Exception:
+        except (TypeError, ValueError, KeyError):
             return jsonify({"error": "Invalid data format"}), 400
 
     return jsonify({})
