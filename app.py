@@ -33,20 +33,32 @@ data = {
 
 @app.route('/test')
 def hello_world():
-    '''
-    Returns a JSON test message
-    '''
+    """
+    Returns a test message.
+
+    Returns
+    -------
+    Response
+        JSON response with a greeting message.
+    """
     return jsonify({"message": "Hello, World!"})
 
 
 @app.route('/resume/experience', methods=['GET', 'POST'])
 def experience():
-    '''
-    Handles experience requests
-    This function handles two types of HTTP requests:
-    - GET: Retrieves all experience data.
-    - POST: Adds new experience data.
-    '''
+    """
+    Handles experience data requests.
+
+    GET: Returns all stored experience entries.
+    POST: Adds a new experience entry.
+
+    Returns
+    -------
+    Response
+        JSON list of experience entries (on GET) or a new entry ID (on POST).
+        Returns 400 if required fields are missing in POST.
+        Returns 405 if method is not allowed.
+    """
     if request.method == 'GET':
         return jsonify(data['experience']), 200
 
@@ -73,9 +85,19 @@ def experience():
 
 @app.route('/resume/experience/<int:index>', methods=['GET'])
 def get_experience_by_index(index):
-    '''
-    Get a specific experience by index
-    '''
+    """
+    Retrieves an experience entry by index.
+
+    Parameters
+    ----------
+    index : int
+        The index of the experience entry to retrieve.
+
+    Returns
+    -------
+    Response
+        JSON of the experience entry if found, otherwise 404 error.
+    """
     try:
         experience_item = data['experience'][index]
         return jsonify(experience_item)
@@ -121,9 +143,18 @@ def delete_education(index):
 
 @app.route('/resume/skill', methods=['GET', 'POST'])
 def skill():
-    '''
-    Handles Skill requests
-    '''
+    """
+    Handles skill data requests.
+
+    GET: Returns all stored skill entries.
+    POST: Adds a new skill entry (to be implemented).
+
+    Returns
+    -------
+    Response
+        JSON of skill data (or empty placeholder) on GET.
+        Returns 405 if method is not allowed.
+    """
     if request.method == 'GET':
         return jsonify({})
 
