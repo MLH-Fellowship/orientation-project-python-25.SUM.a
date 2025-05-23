@@ -110,12 +110,12 @@ def education_by_index(index):
             return jsonify(education_item)
         except IndexError:
             return jsonify({"error": "Education not found"}), 404
-    
     if request.method == 'DELETE':
         if 0 <= index < len(data["education"]):
             data["education"].pop(index)
             return jsonify({"message": "Education has been deleted"}), 200
         return jsonify({"error": "Index out of range"}), 404
+    return jsonify({"error": "Method not allowed"}), 405
 
 
 @app.route('/resume/skill', methods=['GET', 'POST'])

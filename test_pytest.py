@@ -100,8 +100,7 @@ def test_get_experience_by_id():
 
 def test_education():
     '''
-    Add a new education and then get all educations. 
-    
+    Add a new education and then get all educations.
     Check that it returns the new education in that list
     '''
     example_education = {
@@ -112,7 +111,7 @@ def test_education():
         "grade": "86%",
         "logo": "example-logo.png"
     }
-    
+
     initial_response = app.test_client().get('/resume/education')
     assert initial_response.status_code == 200
     initial_length = len(initial_response.json)
