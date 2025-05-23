@@ -105,7 +105,6 @@ def test_get_experience_by_id():
 def test_education():
     """
     Add a new education and then get all educations.
-
     Check that it returns the new education in that list
     """
     example_education = {
@@ -116,12 +115,65 @@ def test_education():
         "grade": "86%",
         "logo": "example-logo.png",
     }
-    item_id = (
-        app.test_client().post("/resume/education", json=example_education).json["id"]
-    )
+
+    initial_response = app.test_client().get("/resume/education")
+    assert initial_response.status_code == 200
+    initial_length = len(initial_response.json)
+
+    post_response = app.test_client().post("/resume/education", json=example_education)
+    assert post_response.status_code == 201
+    item_id = post_response.json["id"]
 
     response = app.test_client().get("/resume/education")
-    assert response.json[item_id] == example_education
+    assert response.status_code == 200
+    assert len(response.json) == initial_length + 1
+
+    education_dict = {
+        "course": response.json[item_id].get("course"),
+        "school": response.json[item_id].get("school"),
+        "start_date": response.json[item_id].get("start_date"),
+        "end_date": response.json[item_id].get("end_date"),
+        "grade": response.json[item_id].get("grade"),
+        "logo": response.json[item_id].get("logo"),
+    }
+    assert education_dict == example_education
+
+    assert item_id == len(response.json) - 1
+
+
+def test_get_education_by_id():
+    """
+    Get a specific education by its id
+    """
+    example_education = {
+        "course": "Computer Science",
+        "school": "UBC",
+        "start_date": "January 2022",
+        "end_date": "June 2026",
+        "grade": "90%",
+        "logo": "example-logo.png",
+    }
+
+    post_response = app.test_client().post("/resume/education", json=example_education)
+    assert post_response.status_code == 201
+    item_id = post_response.json["id"]
+
+    response = app.test_client().get(f"/resume/education/{item_id}")
+    assert response.status_code == 200
+
+    education_dict = {
+        "course": response.json.get("course"),
+        "school": response.json.get("school"),
+        "start_date": response.json.get("start_date"),
+        "end_date": response.json.get("end_date"),
+        "grade": response.json.get("grade"),
+        "logo": response.json.get("logo"),
+    }
+    assert education_dict == example_education
+
+    response = app.test_client().get("/resume/education/999")
+    assert response.status_code == 404
+    assert response.json["error"] == "Education not found"
 
 
 def test_delete_education():
@@ -154,8 +206,8 @@ def test_delete_education():
 
     # Delete again to check if it fails:
     del_resp = client.delete(f"/resume/education/{item_id}")
-    assert del_resp.status_code == 404
-    assert del_resp.json["error"] == "Index out of range"
+    assert del_resp.status_code == 400
+    assert del_resp.json["error"] == "400 Bad Request"
 
 
 def test_skill():
@@ -200,3 +252,52 @@ def test_skill_id_return():
     response = app.test_client().post("/resume/skill", json=example_skill)
     assert response.status_code == 201
     assert "id" in response.json
+
+
+def test_invalid_input_validation():
+    """
+    Test that the API properly validates input data for POST requests
+    """
+    client = app.test_client()
+    # Test invalid experience
+    invalid_experience = {
+        "title": "Software Developer",
+        # Missing required fields
+    }
+    response = client.post("/resume/experience", json=invalid_experience)
+    assert response.status_code == 400
+    assert "error" in response.json
+    assert "Missing required fields" in response.json["error"]
+    assert "company" in response.json["error"]
+    assert "start_date" in response.json["error"]
+    assert "end_date" in response.json["error"]
+    assert "description" in response.json["error"]
+    assert "logo" in response.json["error"]
+    # Test invalid education
+    invalid_education = {
+        "course": "Computer Science",
+        # Missing required fields
+    }
+    response = client.post("/resume/education", json=invalid_education)
+    assert response.status_code == 400
+    assert "error" in response.json
+    assert "Missing required fields" in response.json["error"]
+    assert "school" in response.json["error"]
+    assert "start_date" in response.json["error"]
+    assert "end_date" in response.json["error"]
+    assert "grade" in response.json["error"]
+    assert "logo" in response.json["error"]
+    # Test invalid skill
+    invalid_skill = {
+        "name": "Python",
+        # Missing required fields
+    }
+    response = client.post("/resume/skill", json=invalid_skill)
+    assert response.status_code == 400
+    assert "error" in response.json
+    assert "Missing required fields" in response.json["error"]
+    assert "proficiency" in response.json["error"]
+    assert "logo" in response.json["error"]
+    # Test invalid data format
+    response = client.post("/resume/experience", data="not json")
+    assert response.status_code == 415

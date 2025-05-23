@@ -4,6 +4,7 @@ Flask Application
 
 from flask import Flask, jsonify, request
 from models import Experience, Education, Skill
+from utils import validate_data
 
 app = Flask(__name__)
 
@@ -35,7 +36,12 @@ data = {
 @app.route("/test")
 def hello_world():
     """
-    Returns a JSON test message
+    Returns a test message.
+
+    Returns
+    -------
+    Response
+        JSON response with a greeting message.
     """
     return jsonify({"message": "Hello, World!"})
 
@@ -43,40 +49,40 @@ def hello_world():
 @app.route("/resume/experience", methods=["GET", "POST"])
 def experience():
     """
-    Handles experience requests
-    This function handles two types of HTTP requests:
-    - GET: Retrieves all experience data.
-    - POST: Adds new experience data.
+    Handles experience data requests.
+
+    GET: Returns all stored experience entries.
+    POST: Adds a new experience entry.
+
+    Returns
+    -------
+    Response
+        JSON list of experience entries (on GET) or a new entry ID (on POST).
+        Returns 400 if required fields are missing in POST.
+        Returns 405 if method is not allowed.
     """
     if request.method == "GET":
         return jsonify(data["experience"]), 200
 
     if request.method == "POST":
-        experience_data = request.get_json()
-        # Validate the json data
-        if not all(
-            key in experience_data
-            for key in [
-                "title",
-                "company",
-                "start_date",
-                "end_date",
-                "description",
-                "logo",
-            ]
-        ):
-            return jsonify({"error": "Missing required fields"}), 400
+        try:
+            experience_data = request.get_json()
+            is_valid, error_message = validate_data("experience", experience_data)
+            if not is_valid:
+                return jsonify({"error": error_message}), 400
 
-        new_experience = Experience(
-            experience_data["title"],
-            experience_data["company"],
-            experience_data["start_date"],
-            experience_data["end_date"],
-            experience_data["description"],
-            experience_data["logo"],
-        )
-        data["experience"].append(new_experience)
-        return jsonify({"id": len(data["experience"]) - 1}), 201
+            new_experience = Experience(
+                experience_data["title"],
+                experience_data["company"],
+                experience_data["start_date"],
+                experience_data["end_date"],
+                experience_data["description"],
+                experience_data["logo"],
+            )
+            data["experience"].append(new_experience)
+            return jsonify({"id": len(data["experience"]) - 1}), 201
+        except (TypeError, ValueError, KeyError):
+            return jsonify({"error": "Invalid data format"}), 400
 
     return jsonify({"error": "Method not allowed"}), 405
 
@@ -84,7 +90,17 @@ def experience():
 @app.route("/resume/experience/<int:index>", methods=["GET"])
 def get_experience_by_index(index):
     """
-    Get a specific experience by index
+    Retrieves an experience entry by index.
+
+    Parameters
+    ----------
+    index : int
+        The index of the experience entry to retrieve.
+
+    Returns
+    -------
+    Response
+        JSON of the experience entry if found, otherwise 404 error.
     """
     try:
         experience_item = data["experience"][index]
@@ -99,46 +115,77 @@ def education():
     Handles education requests
     """
     if request.method == "GET":
-        return jsonify({})
+        return jsonify(data["education"]), 200
 
     if request.method == "POST":
-        return jsonify({})
+        try:
+            education_data = request.get_json()
+            is_valid, error_message = validate_data("education", education_data)
+            if not is_valid:
+                return jsonify({"error": error_message}), 400
+            # pylint: disable=fixme
+            # TODO: Create new Education object with education_data
+            # TODO: Append new education to data['education']
+            # TODO: Return jsonify({"id": len(data['education']) - 1}), 201
+            return jsonify({}), 201
+        except (TypeError, ValueError, KeyError):
+            return jsonify({"error": "Invalid data format"}), 400
 
     return jsonify({})
 
 
-@app.route("/resume/education/<int:index>", methods=["DELETE"])
-def delete_education(index):
+@app.route("/resume/education/<int:index>", methods=["GET", "DELETE"])
+def education_by_index(index):
     """
-    Deletes an education entry at the specified index.
-
-    Parameters
-    ----------
-    index : int
-        The index of the education entry to delete.
-
-    Returns
-    -------
-    Response
-        JSON response indicating success (with `deleted: True`) or
-        failure (with an error message and 404 status code).
+    Handles education requests by index
+    This function handles two types of HTTP requests:
+    - GET: Retrieves a specific education by index
+    - DELETE: Deletes a specific education by index
     """
-    if 0 <= index < len(data["education"]):
-        data["education"].pop(index)
-        return jsonify({"message": "Education has been deleted"}), 200
-    return jsonify({"error": "Index out of range"}), 404
+    if request.method == "GET":
+        try:
+            education_item = data["education"][index]
+            return jsonify(education_item)
+        except IndexError:
+            return jsonify({"error": "Education not found"}), 404
+    if request.method == "DELETE":
+        if 0 <= index < len(data["education"]):
+            data["education"].pop(index)
+            return jsonify({"message": "Education has been deleted"}), 200
+        return jsonify({"error": "400 Bad Request"}), 400
+    return jsonify({"error": "Method not allowed"}), 405
 
 
 @app.route("/resume/skill", methods=["GET", "POST"])
 def skill():
     """
-    This handles GET and POST request for skills:
+    Handles skill data requests.
 
-    GET: Retrieves all skills
-    POST: Adds a new skill and returns the index of the current skill
+    GET: Returns all stored skill entries.
+    POST: Adds a new skill entry (to be implemented).
+
+    Returns
+    -------
+    Response
+        JSON of skill data (or empty placeholder) on GET.
+        Returns 405 if method is not allowed.
     """
     if request.method == "GET":
-        return jsonify(data["skill"])
+        return jsonify(data["skill"]), 200
+
+    if request.method == "POST":
+        try:
+            skill_data = request.get_json()
+            is_valid, error_message = validate_data("skill", skill_data)
+            if not is_valid:
+                return jsonify({"error": error_message}), 400
+            # pylint: disable=fixme
+            # TODO: Create new Skill object with skill_data
+            # TODO: Append new skill to data['skill']
+            # TODO: Return jsonify({"id": len(data['skill']) - 1}), 201
+            return jsonify({}), 201
+        except (TypeError, ValueError, KeyError):
+            return jsonify({"error": "Invalid data format"}), 400
 
     if request.method == "POST":
         experience_data = request.get_json()
