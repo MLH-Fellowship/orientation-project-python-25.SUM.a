@@ -7,6 +7,9 @@ from flask import Flask, jsonify, request
 from spellchecker import SpellChecker
 from models import Experience, Education, Skill
 
+# Initialize the spell checker
+spell = SpellChecker()
+
 app = Flask(__name__)
 
 data = {
@@ -21,14 +24,12 @@ data = {
         )
     ],
     "education": [
-        Education(
-            "Computer Science",
-            "University of Tech",
-            "September 2019",
-            "July 2022",
-            "80%",
-            "example-logo.png",
-        )
+        Education("Computer Science",
+                  "University of Tech",
+                  "September 2019",
+                  "July 2022",
+                  "80%",
+                  "example-logo.png")
     ],
     "skill": [Skill("Python", "1-2 Years", "example-logo.png")],
 }
@@ -225,50 +226,13 @@ def update_education(item_id):
 
 @app.route("/resume/skill", methods=["GET", "POST"])
 def skill():
-    """
-    Handles skill data requests.
+    '''
+    Handles Skill requests
+    '''
+    if request.method == 'GET':
+        return jsonify({})
 
-    GET: Returns all stored skill entries.
-    POST: Adds a new skill entry (to be implemented).
+    if request.method == 'POST':
+        return jsonify({})
 
-    Returns
-    -------
-    Response
-        JSON of skill data (or empty placeholder) on GET.
-        Returns 405 if method is not allowed.
-    """
-    if request.method == "GET":
-        return jsonify(data["skill"]), 200
-
-    # if request.method == "POST":
-    #     try:
-    #         skill_data = request.get_json()
-    #         is_valid, error_message = validate_data("skill", skill_data)
-    #         if not is_valid:
-    #             return jsonify({"error": error_message}), 400
-    #         # pylint: disable=fixme
-    #         # TODO: Create new Skill object with skill_data
-    #         # TODO: Append new skill to data['skill']
-    #         # TODO: Return jsonify({"id": len(data['skill']) - 1}), 201
-    #         return jsonify({}), 201
-    #     except (TypeError, ValueError, KeyError):
-    #         return jsonify({"error": "Invalid data format"}), 400
-
-    if request.method == "POST":
-        experience_data = request.get_json()
-
-        if not all(key in experience_data for key in ["name", "proficiency", "logo"]):
-            return jsonify({"error": "Missing required fields"}), 400
-
-        data["skill"].append(
-            Skill(
-                request.json["name"], request.json["proficiency"], request.json["logo"]
-            )
-        )
-        return jsonify({"id": len(data["skill"]) - 1}), 201
-
-    return jsonify({"error": "Method not allowed"}), 405
-
-
-if __name__ == "__main__":
-    app.run()
+    return jsonify({})
