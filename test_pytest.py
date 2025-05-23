@@ -170,3 +170,55 @@ def test_skill():
 
     response = app.test_client().get('/resume/skill')
     assert response.json[item_id] == example_skill
+
+
+def test_spellcheck_resume_entries():
+    '''
+    Add intentionally misspelled data and verify the spellcheck endpoint 
+    returns corrected results.
+    '''
+    # Add misspelled experience:
+    bad_experience = {
+        "title": "Sofware Develper", # typo
+        "company": "Amazon",
+        "start_date": "Jan 2021",
+        "end_date": "Dec 2023",
+        "description": "Writing Python code",
+        "logo": "example-logo.png"
+    }
+    app.test_client().post('/resume/experience', json=bad_experience)
+
+    # Add misspelled education:
+    bad_education = {
+        "course": "Enginering",  # typo
+        "school": "University of California",
+        "start_date": "August 2018",
+        "end_date": "May 2022",
+        "grade": "88%",
+        "logo": "example-logo.png"
+    }
+    app.test_client().post('/resume/education', json=bad_education)
+
+    # Add misspelled skill:
+    bad_skill = {
+        "name": "Javasript", # typo
+        "proficiency": "Intermediate",
+        "logo": "example-logo.png"
+    }
+    app.test_client().post('/resume/skill', json=bad_skill)
+
+    # Call the spellcheck endpoint:
+    response = app.test_client().get('/resume/spellcheck')
+    assert response.status_code == 200
+    corrections = response.get_json()
+
+    print(corrections)
+
+    # TODO: For all tests to pass, the missing endpoint must be implemented in `app.py` # pylint: disable=fixme
+    assert len(corrections) == 3
+    assert corrections[0]['before'] == "Sofware Develper"
+    assert corrections[0]['after'] == "Software Developer"
+    assert corrections[1]['before'] == "Enginering"
+    assert corrections[1]['after'] == "Engineering"
+    assert corrections[2]['before'] == "Javasript"
+    assert corrections[2]['after'] == "Javascript"

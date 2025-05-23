@@ -2,7 +2,11 @@
 Flask Application
 '''
 from flask import Flask, jsonify, request
+from spellchecker import SpellChecker
 from models import Experience, Education, Skill
+
+# Initialize the spell checker
+spell = SpellChecker()
 
 app = Flask(__name__)
 
@@ -17,7 +21,7 @@ data = {
     ],
     "education": [
         Education("Computer Science",
-                  "University of Tech",
+                  "University of Technology",
                   "September 2019",
                   "July 2022",
                   "80%",
@@ -162,3 +166,73 @@ def skill():
         return jsonify({})
 
     return jsonify({})
+
+
+def spell_check_text(text):
+    """
+    Checks and corrects spelling in a sentence.
+
+    Parameters
+    ----------
+    text : str
+        The input sentence to be checked.
+
+    Returns
+    -------
+    dict or None
+        A dictionary with 'before' and 'after' keys if corrections are found,
+        otherwise None.
+    """
+    words = text.split()
+    corrected = {}
+
+    for word in words:
+        if word in spell:
+            continue
+        correction = spell.correction(word)
+        if correction and correction != word:
+            # Match the original casing...
+            if word.isupper():
+                correction = correction.upper()
+            elif word.istitle():
+                correction = correction.title()
+            elif word.islower():
+                correction = correction.lower()
+            corrected[word] = correction
+
+    if corrected:
+        corrected_text = ' '.join([
+            corrected.get(w, w)
+            for w in words
+        ])
+        return {
+            "before": text,
+            "after": corrected_text
+        }
+    return None
+
+
+@app.route('/resume/spellcheck', methods=['GET'])
+def spellcheck_resume_entries():
+    """
+    Performs spell check on Experience, Education, and Skill entries.
+
+    Returns
+    -------
+    Response
+        A JSON list of objects showing spelling corrections. Each object
+        contains 'before' and 'after' fields representing the original and 
+        corrected text respectively.
+    """
+    corrections = []
+
+    for section in ['experience', 'education', 'skill']:
+        for item in data[section]:
+            item_dict = item.__dict__ if hasattr(item, '__dict__') else item
+            for _, value in item_dict.items():
+                if isinstance(value, str):
+                    correction = spell_check_text(value)
+                    if correction:
+                        corrections.append(correction)
+
+    return jsonify(corrections), 200
