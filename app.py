@@ -34,11 +34,7 @@ data = {
     ]
 }
 
-# TEMP: Ollama Local Server Configuration START
-# openai.api_key = os.getenv("OPENAI_API_KEY", "YOUR_DEFAULT_API_KEY_HERE") # Original OpenAI Key
-openai.api_key = "ollama" # Key for Ollama (often not strictly needed for local)
-openai.api_base = "http://localhost:11434/v1" # Ollama API Base
-# TEMP: Ollama Local Server Configuration END
+openai.api_key = os.getenv("OPENAI_API_KEY", "YOUR_DEFAULT_API_KEY_HERE") # Replace with your actual key or ensure OPENAI_API_KEY is set
 
 def get_openai_suggestions(description: str, section_name: str) -> list[str]:
     """
@@ -47,8 +43,7 @@ def get_openai_suggestions(description: str, section_name: str) -> list[str]:
     try:
         prompt = f"Rewrite this {section_name} description to be more impactful and concise. Provide 3 variations:\\n\\n{description}"
         response = openai.ChatCompletion.create(
-            # model="gpt-3.5-turbo", # Original OpenAI model
-            model="llama2", # TEMP: Change to your Ollama model if different (e.g., "mistral")
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are an assistant that helps improve resume descriptions."},
                 {"role": "user", "content": prompt}
