@@ -113,7 +113,7 @@ def experience():
 
 
 @app.route('/resume/experience/<int:index>', methods=['GET', 'PUT'])
-def experience_by_index(index):
+def get_experience_by_index(index):
     """
     Retrieves or updates an experience entry by index.
 
