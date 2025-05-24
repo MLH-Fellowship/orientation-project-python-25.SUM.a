@@ -204,10 +204,18 @@ def education():
             is_valid, error_message = validate_data('education', education_data)
             if not is_valid:
                 return jsonify({"error": error_message}), 400
-            # TODO: Create new Education object with education_data
-            # Ensure to include education_data['description'] when implementing
-            # TODO: Append new education to data['education']
-            return jsonify({}), 201
+            
+            new_education = Education(
+                education_data['course'],
+                education_data['school'],
+                education_data['start_date'],
+                education_data['end_date'],
+                education_data['grade'],
+                education_data.get('description', ""), # Add description, default to empty string
+                education_data['logo']
+            )
+            data['education'].append(new_education)
+            return jsonify({"id": len(data['education']) - 1}), 201
         except (TypeError, ValueError, KeyError):
             return jsonify({"error": "Invalid data format"}), 400
 
