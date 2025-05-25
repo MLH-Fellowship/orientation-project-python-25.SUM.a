@@ -98,6 +98,84 @@ def test_get_experience_by_id():
     assert response.status_code == 404
     assert response.json['error'] == "Experience not found"
 
+def test_update_experience():
+    """
+    Update an experience and check that it correctly updates.
+    """
+    example_experience = {
+        "title": "Software Developer",
+        "company": "G-research",
+        "start_date": "May 2025",
+        "end_date": "Present",
+        "description": "Writing C-sharp Code",
+        "logo": "example-logo.png"
+    }
+
+    item_id = app.test_client().post('/resume/experience', json=example_experience).json['id']
+    updated_data = {**example_experience, "title": "Senior Software Dev"}
+    response = app.test_client().put(f'/resume/experience/{item_id}', json=updated_data)
+
+    assert response.status_code == 200
+    response_data = response.json
+    assert response_data['message'] == "Experience updated successfully"
+    get_response = app.test_client().get('/resume/experience')
+    updated_experience = get_response.json[item_id]
+
+    assert updated_experience["title"] == updated_data['title']
+    assert updated_experience["company"] == updated_data['company']
+    assert updated_experience["start_date"] == updated_data['start_date']
+    assert updated_experience["end_date"] == updated_data['end_date']
+    assert updated_experience["description"] == updated_data['description']
+    assert updated_experience["logo"] == updated_data['logo']
+
+def test_update_experience_with_unknown_field():
+    """
+    Update an experience with a field not part of the Experience model.
+    This should still return 200, but the unknown field should not be saved.
+    """
+    example_experience = {
+        "title": "Software Developer",
+        "company": "G-research",
+        "start_date": "May 2025",
+        "end_date": "Present",
+        "description": "Writing C-sharp Code",
+        "logo": "example-logo.png"
+    }
+
+    updated_experience = {
+        **example_experience,
+        "title": "Updated Title",
+        "new_field": "This should not be saved"
+    }
+
+    item_id = app.test_client().post('/resume/experience', json=example_experience).json['id']
+    response = app.test_client().put(f'/resume/experience/{item_id}', json=updated_experience)
+    assert response.status_code == 200
+    get_response = app.test_client().get('/resume/experience')
+    saved_data = get_response.json[item_id]
+    assert "new_field" not in saved_data
+    assert saved_data["title"] == "Updated Title"
+
+def test_update_experience_invalid_id():
+    """
+    Update an experience with an invalid id and check that it returns a 404
+    """
+    example_experience = {
+        "title": "Software Developer",
+        "company": "G-research",
+        "start_date": "May 2025",
+        "end_date": "Present",
+        "description": "Writing C-sharp Code",
+        "logo": "example-logo.png"
+    }
+
+    item_id = app.test_client().post('/resume/experience', json=example_experience).json['id']
+    updated_experience = {**example_experience, 'company': 'New Company'}
+    response = app.test_client().put(f'/resume/experience/{item_id + 1}', json=updated_experience)
+    assert response.status_code == 404
+    response_data = response.json
+    assert response_data['error'] == "Experience not found"
+
 def test_education():
     '''
     Add a new education and then get all educations.

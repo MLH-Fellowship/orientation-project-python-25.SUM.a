@@ -1,6 +1,7 @@
 '''
 Flask Application
 '''
+from dataclasses import fields
 from flask import Flask, jsonify, request
 from models import Experience, Education, Skill
 from utils import validate_data
@@ -107,6 +108,34 @@ def get_experience_by_index(index):
     except IndexError:
         return jsonify({"error": "Experience not found"}), 404
 
+@app.route('/resume/experience/<int:item_id>', methods=['PUT'])
+def update_experience(item_id):
+    """
+    Update an experience by index.
+
+    Parameters
+    ----------
+    index : int
+        The index of the experience to update.
+
+    Returns
+    -------
+    Response
+        JSON message indicating success or error.
+        Returns 404 if experience not found
+        Returns 400 if request is invalid. 
+    """
+    content = request.json
+    if not content:
+        return jsonify({"error": "Invalid request"}), 400
+
+    if 0 <= item_id < len(data['experience']):
+        valid_keys = {f.name for f in fields(Experience)}
+        filtered_content = {k: v for k, v in content.items() if k in valid_keys}
+
+        data['experience'][item_id] = Experience(**filtered_content)
+        return jsonify({"message": "Experience updated successfully"})
+    return jsonify({"error": "Experience not found"}), 404
 
 @app.route('/resume/education', methods=['GET', 'POST'])
 def education():
