@@ -550,3 +550,89 @@ def test_suggest_education_description(mock_openai_create):
                                      json={"description": ""})
     assert response_empty_body_desc.status_code == 400
     assert response_empty_body_desc.json['error'] == "Description is empty"
+
+def test_update_skill():
+    """
+    Add a skill, then update it and check if the changes are reflected.
+    """
+    # Ensure there's at least one skill to update, or add one
+    # Get initial skills to find a valid index
+    initial_skills_response = app.test_client().get('/resume/skill')
+    initial_skills = initial_skills_response.json
+    
+    if not initial_skills: # Add a skill if none exist
+        example_skill_to_add = {
+            "name": "InitialPyTestSkill",
+            "proficiency": "Beginner",
+            "logo": "initial_logo.png"
+        }
+        post_response = app.test_client().post('/resume/skill', json=example_skill_to_add)
+        assert post_response.status_code == 201
+        item_id_to_update = post_response.json['id']
+    else:
+        # Use the index of the first existing skill
+        item_id_to_update = 0
+
+    # Data for updating the skill
+    skill_update_payload = {
+        "name": "Updated PyTestSkill",
+        "proficiency": "Intermediate",
+        "logo": "updated_logo.png"
+    }
+
+    # Perform the PUT request
+    put_response = app.test_client().put(f'/resume/skill/{item_id_to_update}', 
+                                         json=skill_update_payload)
+    assert put_response.status_code == 200
+    assert put_response.json['message'] == "Skill updated successfully"
+
+    # Verify the skill was updated
+    get_response = app.test_client().get('/resume/skill')
+    updated_skills_list = get_response.json
+    # Ensure the index is still valid after potential additions/deletions in other tests
+    # This might require isolating test data or resetting state if tests interfere.
+    # For now, assume item_id_to_update remains valid within this test's scope if it was just added or 0.
+    if item_id_to_update >= len(updated_skills_list):
+        # This case can happen if other tests delete items, or if the initial list was empty and an ID was returned that became invalid.
+        # A robust solution involves test isolation or fetching the item by a more stable ID if the app supported it.
+        # For now, we will re-fetch the list and use the last item if ID is out of bounds after adding.
+        if not initial_skills: # If we added a skill, its ID is the last index
+             item_id_to_update = len(updated_skills_list) -1
+        else: # If we used index 0, it should still be valid unless list became empty
+            assert len(updated_skills_list) > 0, "Skill list became empty, cannot verify update at index 0"
+            item_id_to_update = 0 # Reaffirm using index 0 for existing items
+    
+    updated_skill_data = updated_skills_list[item_id_to_update]
+
+    assert updated_skill_data['name'] == skill_update_payload['name']
+    assert updated_skill_data['proficiency'] == skill_update_payload['proficiency']
+    assert updated_skill_data['logo'] == skill_update_payload['logo']
+
+    # Test updating a non-existent skill
+    non_existent_index = len(updated_skills_list) + 5 # An index that surely doesn't exist
+    put_response_not_found = app.test_client().put(f'/resume/skill/{non_existent_index}', 
+                                                 json=skill_update_payload)
+    assert put_response_not_found.status_code == 404
+    assert put_response_not_found.json['error'] == "Skill not found"
+
+    # Test updating with invalid data (e.g., missing 'name')
+    invalid_payload = {
+        "proficiency": "Expert",
+        "logo": "invalid.png"
+    }
+    # Use a known valid index for this part of the test
+    valid_index_for_invalid_payload_test = 0
+    if not updated_skills_list:
+        # If list somehow became empty, re-add a skill for this specific sub-test
+        temp_skill = {"name": "TempForInvalid", "proficiency": "Temp", "logo": "temp.png"}
+        app.test_client().post('/resume/skill', json=temp_skill)
+        updated_skills_list = app.test_client().get('/resume/skill').json # refresh
+        valid_index_for_invalid_payload_test = len(updated_skills_list) - 1
+    elif valid_index_for_invalid_payload_test >= len(updated_skills_list):
+        valid_index_for_invalid_payload_test = len(updated_skills_list) -1 # ensure it is valid
+
+
+    put_response_invalid_data = app.test_client().put(f'/resume/skill/{valid_index_for_invalid_payload_test}',
+                                                      json=invalid_payload)
+    assert put_response_invalid_data.status_code == 400
+    assert "Missing required fields: name" in put_response_invalid_data.json['error']

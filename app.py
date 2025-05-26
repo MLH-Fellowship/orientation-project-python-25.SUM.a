@@ -361,3 +361,39 @@ def skill():
             return jsonify({"error": "Invalid data format"}), 400
 
     return jsonify({})
+
+@app.route('/resume/skill/<int:index>', methods=['PUT'])
+def skill_by_index(index):
+    '''
+    Handles skill updates by index.
+    PUT: Updates a specific skill by index.
+    '''
+    if request.method == 'PUT':
+        try:
+            # Check if the skill exists
+            if not (0 <= index < len(data["skill"])):
+                return jsonify({"error": "Skill not found"}), 404
+
+            skill_update_data = request.get_json()
+            is_valid, error_message = validate_data('skill', skill_update_data)
+            if not is_valid:
+                return jsonify({"error": error_message}), 400
+
+            # Create a new Skill object with updated data
+            updated_skill = Skill(
+                name=skill_update_data.get('name', data['skill'][index].name),
+                proficiency=skill_update_data.get('proficiency', data['skill'][index].proficiency),
+                logo=skill_update_data.get('logo', data['skill'][index].logo)
+            )
+            data['skill'][index] = updated_skill
+            return jsonify({"message": "Skill updated successfully"}), 200
+        except IndexError: # Should be caught by the check above, but as a safeguard
+            return jsonify({"error": "Skill not found"}), 404
+        except (TypeError, ValueError, KeyError):
+            return jsonify({"error": "Invalid data format"}), 400
+    
+    # Should not be reached if only PUT is allowed, but good for completeness
+    return jsonify({"error": "Method not allowed"}), 405
+
+if __name__ == "__main__":
+    app.run(debug=True)
