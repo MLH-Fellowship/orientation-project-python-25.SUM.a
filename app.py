@@ -134,7 +134,7 @@ def update_experience(item_id):
         filtered_content = {k: v for k, v in content.items() if k in valid_keys}
 
         data['experience'][item_id] = Experience(**filtered_content)
-        return jsonify({"message": "Experience updated successfully"})
+        return jsonify({"message": "Experience updated successfully"}), 200
     return jsonify({"error": "Experience not found"}), 404
 
 @app.route('/resume/education', methods=['GET', 'POST'])
