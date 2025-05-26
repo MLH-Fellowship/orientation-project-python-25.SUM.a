@@ -99,4 +99,4 @@ def delete_skill(index):
         data["skill"].pop(index)
         return jsonify({"message": "Successfully deleted skill"}), 200
     
-    return jsonify({"error": "Skill not found"})
+    return jsonify({"error": "Skill not found"}), 404

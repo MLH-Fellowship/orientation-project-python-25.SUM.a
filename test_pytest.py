@@ -102,7 +102,7 @@ def test_delete_skill():
 
 def test_get_skill_by_index():
     """
-    Get specific skill by its index
+    Add a new skill then get specific skill by index
     """
     example_skill = {
         "name": "Java",
