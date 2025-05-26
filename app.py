@@ -173,19 +173,19 @@ def skill():
     if request.method == "GET":
         return jsonify(data["skill"]), 200
 
-    if request.method == "POST":
-        try:
-            skill_data = request.get_json()
-            is_valid, error_message = validate_data("skill", skill_data)
-            if not is_valid:
-                return jsonify({"error": error_message}), 400
-            # pylint: disable=fixme
-            # TODO: Create new Skill object with skill_data
-            # TODO: Append new skill to data['skill']
-            # TODO: Return jsonify({"id": len(data['skill']) - 1}), 201
-            return jsonify({}), 201
-        except (TypeError, ValueError, KeyError):
-            return jsonify({"error": "Invalid data format"}), 400
+    # if request.method == "POST":
+    #     try:
+    #         skill_data = request.get_json()
+    #         is_valid, error_message = validate_data("skill", skill_data)
+    #         if not is_valid:
+    #             return jsonify({"error": error_message}), 400
+    #         # pylint: disable=fixme
+    #         # TODO: Create new Skill object with skill_data
+    #         # TODO: Append new skill to data['skill']
+    #         # TODO: Return jsonify({"id": len(data['skill']) - 1}), 201
+    #         return jsonify({}), 201
+    #     except (TypeError, ValueError, KeyError):
+    #         return jsonify({"error": "Invalid data format"}), 400
 
     if request.method == "POST":
         experience_data = request.get_json()
