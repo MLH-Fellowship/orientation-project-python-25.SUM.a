@@ -3,12 +3,15 @@ Flask Application
 '''
 from dataclasses import fields
 from flask import Flask, jsonify, request
+from flask_cors import CORS # Import CORS
 from models import Experience, Education, Skill
 from utils import validate_data
 import os
 import openai
+from openai import OpenAI # Import the new OpenAI client
 
 app = Flask(__name__)
+CORS(app) # Initialize CORS with the app
 
 data = {
     "experience": [
@@ -35,7 +38,8 @@ data = {
     ]
 }
 
-openai.api_key = os.getenv("OPENAI_API_KEY", "YOUR_DEFAULT_API_KEY_HERE") # Replace with your actual key or ensure OPENAI_API_KEY is set
+openai.api_key = os.getenv("OPENAI_API_KEY", "YOUR_DEFAULT_API_KEY_HERE") # This line will be used by the client
+client = OpenAI(api_key=openai.api_key) # Create the client instance
 
 def get_openai_suggestions(description: str, section_name: str) -> list[str]:
     """
@@ -43,7 +47,7 @@ def get_openai_suggestions(description: str, section_name: str) -> list[str]:
     """
     try:
         prompt = f"Rewrite this {section_name} description to be more impactful and concise. Provide 3 variations:\\n\\n{description}"
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create( # Use the new client and method
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are an assistant that helps improve resume descriptions."},
@@ -53,7 +57,7 @@ def get_openai_suggestions(description: str, section_name: str) -> list[str]:
             stop=None,
             temperature=0.7,
         )
-        suggestions = [choice.message['content'].strip() for choice in response.choices]
+        suggestions = [choice.message.content.strip() for choice in response.choices] # Access content via attribute
         return suggestions
     except Exception as e:
         print(f"Error getting OpenAI suggestions: {e}")
