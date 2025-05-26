@@ -176,6 +176,7 @@ def test_update_experience_invalid_id():
     response_data = response.json
     assert response_data['error'] == "Experience not found"
 
+
 def test_update_experience_with_missing_fields():
     """
     Try updating an experience with missing required fields.

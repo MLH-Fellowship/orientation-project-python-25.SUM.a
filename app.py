@@ -122,7 +122,7 @@ def update_experience(item_id):
     -------
     Response
         JSON message indicating success or error.
-        Returns 404 if experience not found.
+        Returns 404 if experience not found
         Returns 400 if request is invalid. 
     """
     content = request.json
@@ -139,7 +139,6 @@ def update_experience(item_id):
             return jsonify({"error": f"Missing or invalid fields: {str(e)}"}), 400
 
     return jsonify({"error": "Experience not found"}), 404
-
 
 @app.route('/resume/education', methods=['GET', 'POST'])
 def education():
