@@ -102,6 +102,113 @@ def test_get_experience_by_id():
     assert response.json["error"] == "Experience not found"
 
 
+def test_update_experience():
+    """
+    Update an experience and check that it correctly updates.
+    """
+    example_experience = {
+        "title": "Software Developer",
+        "company": "G-research",
+        "start_date": "May 2025",
+        "end_date": "Present",
+        "description": "Writing C-sharp Code",
+        "logo": "example-logo.png"
+    }
+
+    item_id = app.test_client().post('/resume/experience', json=example_experience).json['id']
+    updated_data = {**example_experience, "title": "Senior Software Dev"}
+    response = app.test_client().put(f'/resume/experience/{item_id}', json=updated_data)
+
+    assert response.status_code == 200
+    response_data = response.json
+    assert response_data['message'] == "Experience updated successfully"
+    get_response = app.test_client().get('/resume/experience')
+    updated_experience = get_response.json[item_id]
+
+    assert updated_experience["title"] == updated_data['title']
+    assert updated_experience["company"] == updated_data['company']
+    assert updated_experience["start_date"] == updated_data['start_date']
+    assert updated_experience["end_date"] == updated_data['end_date']
+    assert updated_experience["description"] == updated_data['description']
+    assert updated_experience["logo"] == updated_data['logo']
+
+def test_update_experience_with_unknown_field():
+    """
+    Update an experience with a field not part of the Experience model.
+    This should still return 200, but the unknown field should not be saved.
+    """
+    example_experience = {
+        "title": "Software Developer",
+        "company": "G-research",
+        "start_date": "May 2025",
+        "end_date": "Present",
+        "description": "Writing C-sharp Code",
+        "logo": "example-logo.png"
+    }
+
+    updated_experience = {
+        **example_experience,
+        "title": "Updated Title",
+        "new_field": "This should not be saved"
+    }
+
+    item_id = app.test_client().post('/resume/experience', json=example_experience).json['id']
+    response = app.test_client().put(f'/resume/experience/{item_id}', json=updated_experience)
+    assert response.status_code == 200
+    get_response = app.test_client().get('/resume/experience')
+    saved_data = get_response.json[item_id]
+    assert "new_field" not in saved_data
+    assert saved_data["title"] == "Updated Title"
+
+def test_update_experience_invalid_id():
+    """
+    Update an experience with an invalid id and check that it returns a 404
+    """
+    example_experience = {
+        "title": "Software Developer",
+        "company": "G-research",
+        "start_date": "May 2025",
+        "end_date": "Present",
+        "description": "Writing C-sharp Code",
+        "logo": "example-logo.png"
+    }
+
+    item_id = app.test_client().post('/resume/experience', json=example_experience).json['id']
+    updated_experience = {**example_experience, 'company': 'New Company'}
+    response = app.test_client().put(f'/resume/experience/{item_id + 1}', json=updated_experience)
+    assert response.status_code == 404
+    response_data = response.json
+    assert response_data['error'] == "Experience not found"
+
+
+def test_update_experience_with_missing_fields():
+    """
+    Try updating an experience with missing required fields.
+    Should return 400 Bad Request.
+    """
+    example_experience = {
+        "title": "Software Developer",
+        "company": "G-research",
+        "start_date": "May 2025",
+        "end_date": "Present",
+        "description": "Writing C-sharp Code",
+        "logo": "example-logo.png"
+    }
+
+    invalid_update = {
+        "company": "New Company",
+        "start_date": "June 2025",
+        "end_date": "Present",
+        "description": "Updated Description",
+        "logo": "new-logo.png"
+    }
+
+    item_id = app.test_client().post('/resume/experience', json=example_experience).json['id']
+    response = app.test_client().put(f'/resume/experience/{item_id}', json=invalid_update)
+    assert response.status_code == 400
+    assert "error" in response.json
+
+
 def test_education():
     """
     Add a new education and then get all educations.
@@ -174,6 +281,116 @@ def test_get_education_by_id():
     response = app.test_client().get("/resume/education/999")
     assert response.status_code == 404
     assert response.json["error"] == "Education not found"
+
+def test_update_education():
+    """
+    Update an education and check that it correctly updates.
+    """
+    example_education = {
+        "course": "Engineering",
+        "school": "NYU",
+        "start_date": "October 2022",
+        "end_date": "August 2024",
+        "grade": "86%",
+        "logo": "example-logo.png"
+    }
+
+    item_id = app.test_client().post('/resume/education', json=example_education).json['id']
+    updated_data = {**example_education, "course": "Computer Science"}
+    response = app.test_client().put(f'/resume/education/{item_id}', json=updated_data)
+
+    assert response.status_code == 200
+    response_data = response.json
+    assert response_data['message'] == "Education updated successfully"
+
+    get_response = app.test_client().get('/resume/education')
+    updated_education = get_response.json[item_id]
+
+    assert updated_education["course"] == updated_data['course']
+    assert updated_education["school"] == updated_data['school']
+    assert updated_education["start_date"] == updated_data['start_date']
+    assert updated_education["end_date"] == updated_data['end_date']
+    assert updated_education["grade"] == updated_data['grade']
+    assert updated_education["logo"] == updated_data['logo']
+
+
+def test_update_education_with_unknown_field():
+    """
+    Update an education with a field not part of the Education model.
+    This should still return 200, but the unknown field should not be saved.
+    """
+    example_education = {
+        "course": "Engineering",
+        "school": "NYU",
+        "start_date": "October 2022",
+        "end_date": "August 2024",
+        "grade": "86%",
+        "logo": "example-logo.png"
+    }
+
+    updated_education = {
+        **example_education,
+        "course": "Health Sciences",
+        "new_field": "This should not be saved"
+    }
+
+    item_id = app.test_client().post('/resume/education', json=example_education).json['id']
+    response = app.test_client().put(f'/resume/education/{item_id}', json=updated_education)
+
+    assert response.status_code == 200
+    get_response = app.test_client().get('/resume/education')
+    saved_data = get_response.json[item_id]
+    assert "new_field" not in saved_data
+    assert saved_data["course"] == "Health Sciences"
+
+
+def test_update_education_invalid_id():
+    """
+    Update an education with an invalid id and check that it returns a 404
+    """
+    example_education = {
+        "course": "Engineering",
+        "school": "NYU",
+        "start_date": "October 2022",
+        "end_date": "August 2024",
+        "grade": "86%",
+        "logo": "example-logo.png"
+    }
+
+    item_id = app.test_client().post('/resume/education', json=example_education).json['id']
+    updated_education = {**example_education, 'course': 'Changed Course'}
+    response = app.test_client().put(f'/resume/education/{item_id + 1}', json=updated_education)
+
+    assert response.status_code == 404
+    response_data = response.json
+    assert response_data['error'] == "Education not found"
+
+def test_update_education_with_missing_fields():
+    """
+    Try updating an education with missing required fields.
+    Should return 400 Bad Request.
+    """
+    example_education = {
+        "course": "Engineering",
+        "school": "NYU",
+        "start_date": "October 2022",
+        "end_date": "August 2024",
+        "grade": "86%",
+        "logo": "example-logo.png"
+    }
+
+    invalid_update = {
+        "course": "Physics",
+        "start_date": "January 2023",
+        "end_date": "May 2024",
+        "grade": "90%",
+        "logo": "new-logo.png"
+    }
+
+    item_id = app.test_client().post('/resume/education', json=example_education).json['id']
+    response = app.test_client().put(f'/resume/education/{item_id}', json=invalid_update)
+    assert response.status_code == 400
+    assert "error" in response.json
 
 
 def test_delete_education():
