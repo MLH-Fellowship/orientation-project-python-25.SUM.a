@@ -6,7 +6,6 @@ from dataclasses import fields
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import openai
-from openai import OpenAI
 from models import Experience, Education, Skill
 from utils import validate_data
 
@@ -37,9 +36,8 @@ data = {
               "example-logo.png")
     ]
 }
-
 openai.api_key = os.getenv("OPENAI_API_KEY", "YOUR_DEFAULT_API_KEY_HERE")
-client = OpenAI(api_key=openai.api_key)
+client = openai.OpenAI(api_key=openai.api_key)
 
 def get_openai_suggestions(description: str, section_name: str) -> list[str]:
     """
