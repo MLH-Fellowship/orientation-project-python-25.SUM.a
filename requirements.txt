@@ -1,4 +1,6 @@
-Flask
-pytest
-pylint
-openai
+Flask==2.2.2
+openai==0.27.8
+python-dotenv==0.21.0
+pytest==7.2.0
+Pillow==9.3.0
+flask-cors==4.0.0
