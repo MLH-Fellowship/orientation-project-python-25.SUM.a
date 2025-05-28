@@ -19,29 +19,28 @@ def test_experience():
     Add a new experience and then get all experiences.
 
     Check that it returns the new experience in that list
-    """
+    '''
     example_experience = {
         "title": "Software Developer",
         "company": "A Cooler Company",
         "start_date": "October 2022",
         "end_date": "Present",
         "description": "Writing JavaScript Code",
-        "logo": "example-logo.png",
+        "logo": "example-logo.png"
     }
 
-    item_id = (
-        app.test_client().post("/resume/experience", json=example_experience).json["id"]
-    )
-    response = app.test_client().get("/resume/experience")
+    item_id = app.test_client().post('/resume/experience',
+                                     json=example_experience).json['id']
+    response = app.test_client().get('/resume/experience')
     assert response.json[item_id] == example_experience
 
 
 def test_education():
-    """
-    Add a new education and then get all educations.
-
+    '''
+    Add a new education and then get all educations. 
+    
     Check that it returns the new education in that list
-    """
+    '''
     example_education = {
         "course": "Engineering",
         "school": "NYU",
@@ -50,11 +49,10 @@ def test_education():
         "grade": "86%",
         "logo": "example-logo.png",
     }
-    item_id = (
-        app.test_client().post("/resume/education", json=example_education).json["id"]
-    )
+    item_id = app.test_client().post('/resume/education',
+                                     json=example_education).json['id']
 
-    response = app.test_client().get("/resume/education")
+    response = app.test_client().get('/resume/education')
     assert response.json[item_id] == example_education
 
 
@@ -74,8 +72,8 @@ def test_skill():
 
     response = app.test_client().get("/resume/skill")
     assert response.json[item_id] == example_skill
-
-
+    
+    
 def test_delete_skill():
     """
     Add and delete a skill by index
@@ -120,5 +118,8 @@ def test_get_skill_by_index():
     item_id = post_response.json["index"]
 
     # Retrieve skill by index
-    response = client.post(f"/resume/skill/{item_id}")
+    response = client.post(f'/resume/skill/{item_id}')
     assert response.status_code == 200
+    
+    
+    
