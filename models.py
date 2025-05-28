@@ -32,6 +32,7 @@ class Education:
     start_date: str
     end_date: str
     grade: str
+    description: str
     logo: str
 
 
