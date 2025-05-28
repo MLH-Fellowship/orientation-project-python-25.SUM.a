@@ -113,25 +113,28 @@ def test_update_experience():
         "start_date": "May 2025",
         "end_date": "Present",
         "description": "Writing C-sharp Code",
-        "logo": "example-logo.png"
+        "logo": "example-logo.png",
     }
 
-    item_id = app.test_client().post('/resume/experience', json=example_experience).json['id']
+    item_id = (
+        app.test_client().post("/resume/experience", json=example_experience).json["id"]
+    )
     updated_data = {**example_experience, "title": "Senior Software Dev"}
-    response = app.test_client().put(f'/resume/experience/{item_id}', json=updated_data)
+    response = app.test_client().put(f"/resume/experience/{item_id}", json=updated_data)
 
     assert response.status_code == 200
     response_data = response.json
-    assert response_data['message'] == "Experience updated successfully"
-    get_response = app.test_client().get('/resume/experience')
+    assert response_data["message"] == "Experience updated successfully"
+    get_response = app.test_client().get("/resume/experience")
     updated_experience = get_response.json[item_id]
 
-    assert updated_experience["title"] == updated_data['title']
-    assert updated_experience["company"] == updated_data['company']
-    assert updated_experience["start_date"] == updated_data['start_date']
-    assert updated_experience["end_date"] == updated_data['end_date']
-    assert updated_experience["description"] == updated_data['description']
-    assert updated_experience["logo"] == updated_data['logo']
+    assert updated_experience["title"] == updated_data["title"]
+    assert updated_experience["company"] == updated_data["company"]
+    assert updated_experience["start_date"] == updated_data["start_date"]
+    assert updated_experience["end_date"] == updated_data["end_date"]
+    assert updated_experience["description"] == updated_data["description"]
+    assert updated_experience["logo"] == updated_data["logo"]
+
 
 def test_update_experience_with_unknown_field():
     """
@@ -144,22 +147,27 @@ def test_update_experience_with_unknown_field():
         "start_date": "May 2025",
         "end_date": "Present",
         "description": "Writing C-sharp Code",
-        "logo": "example-logo.png"
+        "logo": "example-logo.png",
     }
 
     updated_experience = {
         **example_experience,
         "title": "Updated Title",
-        "new_field": "This should not be saved"
+        "new_field": "This should not be saved",
     }
 
-    item_id = app.test_client().post('/resume/experience', json=example_experience).json['id']
-    response = app.test_client().put(f'/resume/experience/{item_id}', json=updated_experience)
+    item_id = (
+        app.test_client().post("/resume/experience", json=example_experience).json["id"]
+    )
+    response = app.test_client().put(
+        f"/resume/experience/{item_id}", json=updated_experience
+    )
     assert response.status_code == 200
-    get_response = app.test_client().get('/resume/experience')
+    get_response = app.test_client().get("/resume/experience")
     saved_data = get_response.json[item_id]
     assert "new_field" not in saved_data
     assert saved_data["title"] == "Updated Title"
+
 
 def test_update_experience_invalid_id():
     """
@@ -171,15 +179,19 @@ def test_update_experience_invalid_id():
         "start_date": "May 2025",
         "end_date": "Present",
         "description": "Writing C-sharp Code",
-        "logo": "example-logo.png"
+        "logo": "example-logo.png",
     }
 
-    item_id = app.test_client().post('/resume/experience', json=example_experience).json['id']
-    updated_experience = {**example_experience, 'company': 'New Company'}
-    response = app.test_client().put(f'/resume/experience/{item_id + 1}', json=updated_experience)
+    item_id = (
+        app.test_client().post("/resume/experience", json=example_experience).json["id"]
+    )
+    updated_experience = {**example_experience, "company": "New Company"}
+    response = app.test_client().put(
+        f"/resume/experience/{item_id + 1}", json=updated_experience
+    )
     assert response.status_code == 404
     response_data = response.json
-    assert response_data['error'] == "Experience not found"
+    assert response_data["error"] == "Experience not found"
 
 
 def test_update_experience_with_missing_fields():
@@ -193,7 +205,7 @@ def test_update_experience_with_missing_fields():
         "start_date": "May 2025",
         "end_date": "Present",
         "description": "Writing C-sharp Code",
-        "logo": "example-logo.png"
+        "logo": "example-logo.png",
     }
 
     invalid_update = {
@@ -201,11 +213,15 @@ def test_update_experience_with_missing_fields():
         "start_date": "June 2025",
         "end_date": "Present",
         "description": "Updated Description",
-        "logo": "new-logo.png"
+        "logo": "new-logo.png",
     }
 
-    item_id = app.test_client().post('/resume/experience', json=example_experience).json['id']
-    response = app.test_client().put(f'/resume/experience/{item_id}', json=invalid_update)
+    item_id = (
+        app.test_client().post("/resume/experience", json=example_experience).json["id"]
+    )
+    response = app.test_client().put(
+        f"/resume/experience/{item_id}", json=invalid_update
+    )
     assert response.status_code == 400
     assert "error" in response.json
 
@@ -225,6 +241,34 @@ def test_delete_experience():
     }
 
     post_response = app.test_client().post("/resume/experience", json=example_experience)
+    assert post_response.status_code == 201
+    item_id = post_response.json["id"]
+    delete_response = app.test_client().delete(f"/resume/experience/{item_id}")
+    assert delete_response.status_code == 200
+    assert delete_response.json["message"] == "Experience has been deleted"
+    delete_response = app.test_client().delete(f"/resume/experience/{item_id}")
+    assert delete_response.status_code == 400
+    assert delete_response.json["error"] == "Invalid request"
+
+
+def test_delete_experience():
+    """
+    add an experience entry
+    delete that experience entry by index.
+    Check that it is deleted successfully with correct response.
+    """
+    example_experience = {
+        "title": "Backend Engineer",
+        "company": "Google",
+        "start_date": "March 2023",
+        "end_date": "Present",
+        "description": "Working on scalable systems",
+        "logo": "example-logo.png",
+    }
+
+    post_response = app.test_client().post(
+        "/resume/experience", json=example_experience
+    )
     assert post_response.status_code == 201
     item_id = post_response.json["id"]
     delete_response = app.test_client().delete(f"/resume/experience/{item_id}")
@@ -308,6 +352,7 @@ def test_get_education_by_id():
     assert response.status_code == 404
     assert response.json["error"] == "Education not found"
 
+
 def test_update_education():
     """
     Update an education and check that it correctly updates.
@@ -318,26 +363,28 @@ def test_update_education():
         "start_date": "October 2022",
         "end_date": "August 2024",
         "grade": "86%",
-        "logo": "example-logo.png"
+        "logo": "example-logo.png",
     }
 
-    item_id = app.test_client().post('/resume/education', json=example_education).json['id']
+    item_id = (
+        app.test_client().post("/resume/education", json=example_education).json["id"]
+    )
     updated_data = {**example_education, "course": "Computer Science"}
-    response = app.test_client().put(f'/resume/education/{item_id}', json=updated_data)
+    response = app.test_client().put(f"/resume/education/{item_id}", json=updated_data)
 
     assert response.status_code == 200
     response_data = response.json
-    assert response_data['message'] == "Education updated successfully"
+    assert response_data["message"] == "Education updated successfully"
 
-    get_response = app.test_client().get('/resume/education')
+    get_response = app.test_client().get("/resume/education")
     updated_education = get_response.json[item_id]
 
-    assert updated_education["course"] == updated_data['course']
-    assert updated_education["school"] == updated_data['school']
-    assert updated_education["start_date"] == updated_data['start_date']
-    assert updated_education["end_date"] == updated_data['end_date']
-    assert updated_education["grade"] == updated_data['grade']
-    assert updated_education["logo"] == updated_data['logo']
+    assert updated_education["course"] == updated_data["course"]
+    assert updated_education["school"] == updated_data["school"]
+    assert updated_education["start_date"] == updated_data["start_date"]
+    assert updated_education["end_date"] == updated_data["end_date"]
+    assert updated_education["grade"] == updated_data["grade"]
+    assert updated_education["logo"] == updated_data["logo"]
 
 
 def test_update_education_with_unknown_field():
@@ -351,20 +398,24 @@ def test_update_education_with_unknown_field():
         "start_date": "October 2022",
         "end_date": "August 2024",
         "grade": "86%",
-        "logo": "example-logo.png"
+        "logo": "example-logo.png",
     }
 
     updated_education = {
         **example_education,
         "course": "Health Sciences",
-        "new_field": "This should not be saved"
+        "new_field": "This should not be saved",
     }
 
-    item_id = app.test_client().post('/resume/education', json=example_education).json['id']
-    response = app.test_client().put(f'/resume/education/{item_id}', json=updated_education)
+    item_id = (
+        app.test_client().post("/resume/education", json=example_education).json["id"]
+    )
+    response = app.test_client().put(
+        f"/resume/education/{item_id}", json=updated_education
+    )
 
     assert response.status_code == 200
-    get_response = app.test_client().get('/resume/education')
+    get_response = app.test_client().get("/resume/education")
     saved_data = get_response.json[item_id]
     assert "new_field" not in saved_data
     assert saved_data["course"] == "Health Sciences"
@@ -380,16 +431,21 @@ def test_update_education_invalid_id():
         "start_date": "October 2022",
         "end_date": "August 2024",
         "grade": "86%",
-        "logo": "example-logo.png"
+        "logo": "example-logo.png",
     }
 
-    item_id = app.test_client().post('/resume/education', json=example_education).json['id']
-    updated_education = {**example_education, 'course': 'Changed Course'}
-    response = app.test_client().put(f'/resume/education/{item_id + 1}', json=updated_education)
+    item_id = (
+        app.test_client().post("/resume/education", json=example_education).json["id"]
+    )
+    updated_education = {**example_education, "course": "Changed Course"}
+    response = app.test_client().put(
+        f"/resume/education/{item_id + 1}", json=updated_education
+    )
 
     assert response.status_code == 404
     response_data = response.json
-    assert response_data['error'] == "Education not found"
+    assert response_data["error"] == "Education not found"
+
 
 def test_update_education_with_missing_fields():
     """
@@ -402,7 +458,7 @@ def test_update_education_with_missing_fields():
         "start_date": "October 2022",
         "end_date": "August 2024",
         "grade": "86%",
-        "logo": "example-logo.png"
+        "logo": "example-logo.png",
     }
 
     invalid_update = {
@@ -410,11 +466,15 @@ def test_update_education_with_missing_fields():
         "start_date": "January 2023",
         "end_date": "May 2024",
         "grade": "90%",
-        "logo": "new-logo.png"
+        "logo": "new-logo.png",
     }
 
-    item_id = app.test_client().post('/resume/education', json=example_education).json['id']
-    response = app.test_client().put(f'/resume/education/{item_id}', json=invalid_update)
+    item_id = (
+        app.test_client().post("/resume/education", json=example_education).json["id"]
+    )
+    response = app.test_client().put(
+        f"/resume/education/{item_id}", json=invalid_update
+    )
     assert response.status_code == 400
     assert "error" in response.json
 
@@ -544,7 +604,6 @@ def test_invalid_input_validation():
     response = client.post("/resume/experience", data="not json")
     assert response.status_code == 415
 
-
 # --- Tests for PUT (Update) Endpoints ---
 
 def test_update_education():
@@ -637,12 +696,6 @@ def test_suggest_experience_description(mock_openai_create):
     mock_openai_create.side_effect = None # Reset side_effect
     mock_openai_create.reset_mock()
 
-    # Test with empty description (from item)
-    # To test this, we'd need to be able to create an item with an empty description.
-    # The Experience model requires a description. If we update to allow empty, this test is valid.
-    # Assuming for now description cannot be empty based on model & validate_data.
-    # If description is empty string after update, it would be caught by the endpoint's check.
-
     # Test with empty description (from request body)
     response_empty_body_desc = client.post(
         f'/resume/experience/{item_id}/suggest-description',
@@ -715,3 +768,52 @@ def test_suggest_education_description(mock_openai_create):
     )
     assert response_empty_body_desc.status_code == 400
     assert response_empty_body_desc.json['error'] == "Description is empty"
+
+# --- Tests for Skill Management ---
+
+def test_delete_skill():
+    """
+    Add and delete a skill by index
+
+    Check that the skill is deleted and the response is correct
+    """
+
+    example_skill = {
+        "name": "Java",
+        "proficiency": "1-5 years",
+        "logo": "example-logo.png",
+    }
+
+    client = app.test_client()
+
+    # Add new skill
+    post_response = client.post("/resume/skill", json=example_skill)
+    assert post_response.status_code == 200
+    item_id = post_response.json["index"]
+
+    # Delete skill
+    delete_response = client.delete(f"/resume/skill/{item_id}")
+    assert delete_response.status_code == 200
+    assert delete_response.json["deleted"] is True
+
+
+def test_get_skill_by_index():
+    """
+    Add a new skill then get specific skill by index
+    """
+    example_skill = {
+        "name": "Java",
+        "proficiency": "1-5 years",
+        "logo": "example-logo.png",
+    }
+
+    client = app.test_client()
+
+    # Add skill
+    post_response = client.post("/resume/skill", json=example_skill)
+    assert post_response.status_code == 200
+    item_id = post_response.json["index"]
+
+    # Retrieve skill by index
+    response = client.get(f'/resume/skill/{item_id}')
+    assert response.status_code == 200

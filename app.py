@@ -263,6 +263,29 @@ def delete_experience(item_id):
     data["experience"].pop(item_id)
     return jsonify({"message": "Experience has been deleted"}), 200
 
+@app.route("/resume/experience/<int:item_id>", methods=["DELETE"])
+def delete_experience(item_id):
+    """
+    Delete an experience by index.
+
+    Parameters
+    ----------
+    item_id : int
+        The index of the experience to delete.
+
+    Returns
+    -------
+    Response
+        JSON message indicating success or error.
+        Returns 404 if experience not found.
+        Returns 400 if request is invalid.
+    """
+    if item_id < 0 or item_id >= len(data["experience"]):
+        return jsonify({"error": "Invalid request"}), 400
+    data["experience"].pop(item_id)
+    return jsonify({"message": "Experience has been deleted"}), 200
+
+
 @app.route("/resume/education", methods=["GET", "POST"])
 def education():
     """
@@ -443,6 +466,29 @@ def skill():
         return jsonify({"id": len(data["skill"]) - 1}), 201
 
     return jsonify({"error": "Method not allowed"}), 405
+
+
+@app.route("/resume/skill/<int:index>", methods=["GET"])
+def get_skill_by_index(index):
+    """
+    Get a specific skill by index
+    """
+    try:
+        skill_index = data["skill"][index]
+        return jsonify(skill_index), 200
+    except IndexError:
+        return jsonify({"error": "Skill not found"}), 404
+
+
+@app.route("/resume/skill/<int:index>", methods=["DELETE"])
+def delete_skill(index):
+    """
+    Delete specific skill by index
+    """
+    if 0 <= index < len(data["skill"]):
+        data["skill"].pop(index)
+        return jsonify({"message": "Successfully deleted skill"}), 200
+    return jsonify({"error": "Skill not found"}), 404
 
 
 if __name__ == "__main__":
