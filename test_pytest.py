@@ -2,8 +2,9 @@
 Tests in Pytest
 """
 
-from app import app
+from unittest.mock import patch, MagicMock
 
+from app import app
 
 def test_client():
     """
@@ -496,10 +497,9 @@ def test_delete_education():
     client = app.test_client()
 
     # Add new education:
-    # TODO: Implement the '/resume/education' POST route in `app.py` before running this test. # pylint: disable=fixme
-    post_resp = client.post("/resume/education", json=example_education)
-    assert post_resp.status_code == 200
-    item_id = post_resp.json["id"]
+    post_resp = client.post('/resume/education', json=example_education)
+    assert post_resp.status_code == 201
+    item_id = post_resp.json['id']
 
     # Delete the education using the ID:
     del_resp = client.delete(f"/resume/education/{item_id}")
@@ -604,6 +604,173 @@ def test_invalid_input_validation():
     response = client.post("/resume/experience", data="not json")
     assert response.status_code == 415
 
+# --- Tests for PUT (Update) Endpoints ---
+
+def test_update_education():
+    '''
+    Test updating an existing education item.
+    '''
+    client = app.test_client()
+    initial_education = {
+        "course": "Initial Course", "school": "Initial School", "start_date": "Sep 2019",
+        "end_date": "Jul 2022", "grade": "A", "description": "Initial edu desc", "logo": "initial_edu.png"
+    }
+    post_response = client.post('/resume/education', json=initial_education)
+    assert post_response.status_code == 201
+    item_id = post_response.json['id']
+
+    updated_data = {
+        "course": "Updated Course", "school": "Updated School", "start_date": "Oct 2020",
+        "end_date": "Jun 2023", "grade": "A+", "description": "Updated edu desc", "logo": "updated_edu.png"
+    }
+    put_response = client.put(f'/resume/education/{item_id}', json=updated_data)
+    assert put_response.status_code == 200
+    assert put_response.json['message'] == "Education updated successfully"
+
+    get_response = client.get(f'/resume/education/{item_id}')
+    assert get_response.status_code == 200
+    retrieved_data = {k: get_response.json[k] for k in updated_data}
+    assert retrieved_data == updated_data
+
+    # Test updating non-existent item
+    put_response_non_existent = client.put('/resume/education/999', json=updated_data)
+    assert put_response_non_existent.status_code == 404
+
+# --- Tests for OpenAI Suggestion Endpoints ---
+
+@patch('app.openai.ChatCompletion.create')
+def test_suggest_experience_description(mock_openai_create):
+    '''
+    Test the experience description suggestion endpoint.
+    '''
+    client = app.test_client()
+    # Add an experience item first
+    experience_data = {
+        "title": "Dev", "company": "TestCo", "start_date": "Jan 2022", "end_date": "Present",
+        "description": "Original experience description.", "logo": "logo.png"
+    }
+    post_response = client.post('/resume/experience', json=experience_data)
+    item_id = post_response.json['id']
+
+    # Configure the mock OpenAI response
+    mock_choice1 = MagicMock()
+    mock_choice1.message = {'content': 'Suggested description 1.'}
+    mock_choice2 = MagicMock()
+    mock_choice2.message = {'content': 'Suggested description 2.'}
+    mock_openai_create.return_value = MagicMock(choices=[mock_choice1, mock_choice2])
+
+    # Test suggestion with existing description
+    response = client.post(f'/resume/experience/{item_id}/suggest-description')
+    assert response.status_code == 200
+    assert response.json['suggestions'] == [
+        "Suggested description 1.", "Suggested description 2."
+    ]
+    mock_openai_create.assert_called_once()
+    call_args = mock_openai_create.call_args[1] # keyword arguments
+    assert "Original experience description." in call_args['messages'][1]['content']
+    mock_openai_create.reset_mock()
+
+    # Test suggestion with description from request body
+    response_body_desc = client.post(
+        f'/resume/experience/{item_id}/suggest-description',
+        json={"description": "Body description for experience."}
+    )
+    assert response_body_desc.status_code == 200
+    assert response_body_desc.json['suggestions'] == [
+        "Suggested description 1.", "Suggested description 2."
+    ]
+    mock_openai_create.assert_called_once()
+    call_args_body = mock_openai_create.call_args[1]
+    assert "Body description for experience." in call_args_body['messages'][1]['content']
+    mock_openai_create.reset_mock()
+
+    # Test item not found
+    response_not_found = client.post('/resume/experience/999/suggest-description')
+    assert response_not_found.status_code == 404
+
+    # Test OpenAI API error (simulated by mock raising an exception)
+    mock_openai_create.side_effect = Exception("OpenAI API Error")
+    response_api_error = client.post(f'/resume/experience/{item_id}/suggest-description')
+    assert response_api_error.status_code == 500
+    assert response_api_error.json['error'] == "Could not generate suggestions"
+    mock_openai_create.side_effect = None # Reset side_effect
+    mock_openai_create.reset_mock()
+
+    # Test with empty description (from request body)
+    response_empty_body_desc = client.post(
+        f'/resume/experience/{item_id}/suggest-description',
+        json={"description": ""}
+    )
+    assert response_empty_body_desc.status_code == 400
+    assert response_empty_body_desc.json['error'] == "Description is empty"
+
+@patch('app.openai.ChatCompletion.create')
+def test_suggest_education_description(mock_openai_create):
+    '''
+    Test the education description suggestion endpoint.
+    '''
+    client = app.test_client()
+    # Add an education item first
+    education_data = {
+        "course": "Science", "school": "TestSchool", "start_date": "Sep 2020",
+        "end_date": "Jul 2023", "grade": "B",
+        "description": "Original education description.", "logo": "edu_logo.png"
+    }
+    post_response = client.post('/resume/education', json=education_data)
+    item_id = post_response.json['id']
+
+    # Configure the mock OpenAI response
+    mock_choice1 = MagicMock()
+    mock_choice1.message = {'content': 'Edu suggestion 1.'}
+    mock_choice2 = MagicMock()
+    mock_choice2.message = {'content': 'Edu suggestion 2.'}
+    mock_openai_create.return_value = MagicMock(choices=[mock_choice1, mock_choice2])
+
+    # Test suggestion with existing description
+    response = client.post(f'/resume/education/{item_id}/suggest-description')
+    assert response.status_code == 200
+    assert response.json['suggestions'] == ["Edu suggestion 1.", "Edu suggestion 2."]
+    mock_openai_create.assert_called_once()
+    call_args = mock_openai_create.call_args[1]
+    assert "Original education description." in call_args['messages'][1]['content']
+    mock_openai_create.reset_mock()
+
+    # Test suggestion with description from request body
+    response_body_desc = client.post(
+        f'/resume/education/{item_id}/suggest-description',
+        json={"description": "Body description for education."}
+    )
+    assert response_body_desc.status_code == 200
+    assert response_body_desc.json['suggestions'] == [
+        "Edu suggestion 1.", "Edu suggestion 2."
+    ]
+    mock_openai_create.assert_called_once()
+    call_args_body = mock_openai_create.call_args[1]
+    assert "Body description for education." in call_args_body['messages'][1]['content']
+    mock_openai_create.reset_mock()
+
+    # Test item not found
+    response_not_found = client.post('/resume/education/999/suggest-description')
+    assert response_not_found.status_code == 404
+
+    # Test OpenAI API error
+    mock_openai_create.side_effect = Exception("OpenAI API Error")
+    response_api_error = client.post(f'/resume/education/{item_id}/suggest-description')
+    assert response_api_error.status_code == 500
+    assert response_api_error.json['error'] == "Could not generate suggestions"
+    mock_openai_create.side_effect = None
+    mock_openai_create.reset_mock()
+
+    # Test with empty description (from request body)
+    response_empty_body_desc = client.post(
+        f'/resume/education/{item_id}/suggest-description',
+        json={"description": ""}
+    )
+    assert response_empty_body_desc.status_code == 400
+    assert response_empty_body_desc.json['error'] == "Description is empty"
+
+# --- Tests for Skill Management ---
+
 def test_delete_skill():
     """
     Add and delete a skill by index
@@ -643,13 +810,10 @@ def test_get_skill_by_index():
     client = app.test_client()
 
     # Add skill
-    post_response = client.post("resume/skill", json=example_skill)
+    post_response = client.post("/resume/skill", json=example_skill)
     assert post_response.status_code == 200
     item_id = post_response.json["index"]
 
     # Retrieve skill by index
-    response = client.post(f'/resume/skill/{item_id}')
+    response = client.get(f'/resume/skill/{item_id}')
     assert response.status_code == 200
-    
-    
-    
