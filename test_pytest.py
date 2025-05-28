@@ -208,6 +208,31 @@ def test_update_experience_with_missing_fields():
     assert response.status_code == 400
     assert "error" in response.json
 
+def test_delete_experience():
+    """
+    add an experience entry
+    delete that experience entry by index.
+    Check that it is deleted successfully with correct response.
+    """
+    example_experience = {
+        "title": "Backend Engineer",
+        "company": "Google",
+        "start_date": "March 2023",
+        "end_date": "Present",
+        "description": "Working on scalable systems",
+        "logo": "example-logo.png",
+    }
+
+    post_response = app.test_client().post("/resume/experience", json=example_experience)
+    assert post_response.status_code == 201
+    item_id = post_response.json["id"]
+    delete_response = app.test_client().delete(f"/resume/experience/{item_id}")
+    assert delete_response.status_code == 200
+    assert delete_response.json["message"] == "Experience has been deleted"
+    delete_response = app.test_client().delete(f"/resume/experience/{item_id}")
+    assert delete_response.status_code == 400
+    assert delete_response.json["error"] == "Invalid request"
+
 
 def test_education():
     """
