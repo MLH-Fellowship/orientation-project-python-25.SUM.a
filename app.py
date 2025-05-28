@@ -1,6 +1,6 @@
-'''
+"""
 Flask Application
-'''
+"""
 import os
 from dataclasses import fields
 from flask import Flask, jsonify, request
@@ -14,12 +14,14 @@ CORS(app) # Initialize CORS with the app
 
 data = {
     "experience": [
-        Experience("Software Developer",
-                   "A Cool Company",
-                   "October 2022",
-                   "Present",
-                   "Writing Python Code",
-                   "example-logo.png")
+        Experience(
+            "Software Developer",
+            "A Cool Company",
+            "October 2022",
+            "Present",
+            "Writing Python Code",
+            "example-logo.png",
+        )
     ],
     "education": [
         Education("Computer Science",
@@ -30,11 +32,7 @@ data = {
                   "Learned various concepts in CS.",
                   "example-logo.png")
     ],
-    "skill": [
-        Skill("Python",
-              "1-2 Years",
-              "example-logo.png")
-    ]
+    "skill": [Skill("Python", "1-2 Years", "example-logo.png")],
 }
 openai.api_key = os.getenv("OPENAI_API_KEY", "YOUR_DEFAULT_API_KEY_HERE")
 client = openai.OpenAI(api_key=openai.api_key)
@@ -72,7 +70,7 @@ def get_openai_suggestions(description: str, section_name: str) -> list[str]:
         print(f"Error getting OpenAI suggestions: {e}")
         return []
 
-@app.route('/test')
+@app.route("/test")
 def hello_world():
     """
     Returns a test message.
@@ -85,7 +83,7 @@ def hello_world():
     return jsonify({"message": "Hello, World!"})
 
 
-@app.route('/resume/experience', methods=['GET', 'POST'])
+@app.route("/resume/experience", methods=["GET", "POST"])
 def experience():
     """
     Handles experience data requests.
@@ -100,31 +98,30 @@ def experience():
         Returns 400 if required fields are missing in POST.
         Returns 405 if method is not allowed.
     """
-    if request.method == 'GET':
-        return jsonify(data['experience']), 200
+    if request.method == "GET":
+        return jsonify(data["experience"]), 200
 
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
             experience_data = request.get_json()
-            is_valid, error_message = validate_data('experience', experience_data)
+            is_valid, error_message = validate_data("experience", experience_data)
             if not is_valid:
                 return jsonify({"error": error_message}), 400
 
             new_experience = Experience(
-                experience_data['title'],
-                experience_data['company'],
-                experience_data['start_date'],
-                experience_data['end_date'],
-                experience_data['description'],
-                experience_data['logo']
+                experience_data["title"],
+                experience_data["company"],
+                experience_data["start_date"],
+                experience_data["end_date"],
+                experience_data["description"],
+                experience_data["logo"],
             )
-            data['experience'].append(new_experience)
-            return jsonify({"id": len(data['experience']) - 1}), 201
+            data["experience"].append(new_experience)
+            return jsonify({"id": len(data["experience"]) - 1}), 201
         except (TypeError, ValueError, KeyError):
             return jsonify({"error": "Invalid data format"}), 400
 
     return jsonify({"error": "Method not allowed"}), 405
-
 
 @app.route('/resume/experience/<int:index>', methods=['GET', 'PUT'])
 def get_experience_by_index(index):
@@ -209,7 +206,8 @@ def suggest_experience_description(index):
         print(f"Unexpected error during suggestion: {e}")
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
-@app.route('/resume/experience/<int:item_id>', methods=['PUT'])
+
+@app.route("/resume/experience/<int:item_id>", methods=["PUT"])
 def update_experience(item_id):
     """
     Update an experience by index.
@@ -230,29 +228,53 @@ def update_experience(item_id):
     if not content:
         return jsonify({"error": "Invalid request"}), 400
 
-    if 0 <= item_id < len(data['experience']):
+    if 0 <= item_id < len(data["experience"]):
         try:
             valid_keys = {f.name for f in fields(Experience)}
             filtered_content = {k: v for k, v in content.items() if k in valid_keys}
-            data['experience'][item_id] = Experience(**filtered_content)
+            data["experience"][item_id] = Experience(**filtered_content)
             return jsonify({"message": "Experience updated successfully"}), 200
         except TypeError as e:
             return jsonify({"error": f"Missing or invalid fields: {str(e)}"}), 400
 
     return jsonify({"error": "Experience not found"}), 404
 
-@app.route('/resume/education', methods=['GET', 'POST'])
-def education():
-    '''
-    Handles education requests
-    '''
-    if request.method == 'GET':
-        return jsonify(data['education']), 200
+@app.route("/resume/experience/<int:item_id>", methods=["DELETE"])
+def delete_experience(item_id):
+    """
+    Delete an experience by index.
 
-    if request.method == 'POST':
+    Parameters
+    ----------
+    item_id : int
+        The index of the experience to delete.
+
+    Returns
+    -------
+    Response
+        JSON message indicating success or error.
+        Returns 404 if experience not found.
+        Returns 400 if request is invalid.
+    """
+    if item_id < 0 or item_id >= len(data["experience"]):
+        # Corrected to return 404 for out of bounds, or 400 could be argued if negative.
+        # Let's stick to 404 if it's not a valid index to delete.
+        return jsonify({"error": "Experience not found"}), 404
+    data["experience"].pop(item_id)
+    return jsonify({"message": "Experience has been deleted"}), 200
+
+@app.route("/resume/education", methods=["GET", "POST"])
+def education():
+    """
+    Handles education requests
+    """
+    if request.method == "GET":
+        return jsonify(data["education"]), 200
+
+    if request.method == "POST":
         try:
             education_data = request.get_json()
-            is_valid, error_message = validate_data('education', education_data)
+            is_valid, error_message = validate_data("education", education_data)
             if not is_valid:
                 return jsonify({"error": error_message}), 400
             
@@ -270,17 +292,17 @@ def education():
         except (TypeError, ValueError, KeyError):
             return jsonify({"error": "Invalid data format"}), 400
 
-    return jsonify({})
+    return jsonify({}) # Should be Method Not Allowed for other methods.
 
 @app.route('/resume/education/<int:index>', methods=['GET', 'PUT', 'DELETE'])
 def education_by_index(index):
-    '''
+    """
     Handles education requests by index
     This function handles HTTP requests:
     - GET: Retrieves a specific education by index
     - PUT: Updates a specific education by index
     - DELETE: Deletes a specific education by index
-    '''
+    """
     if not 0 <= index < len(data["education"]):
         return jsonify({"error": "Education not found"}), 404
 
@@ -317,7 +339,8 @@ def education_by_index(index):
 
     return jsonify({"error": "Method not allowed"}), 405
 
-@app.route('/resume/education/<int:item_id>', methods=['PUT'])
+
+@app.route("/resume/education/<int:item_id>", methods=["PUT"])
 def update_education(item_id):
     """
     Update an education by index.
@@ -332,17 +355,17 @@ def update_education(item_id):
     Response
         JSON message indicating success or error.
         Returns 404 if education not found.
-        Returns 400 if request is invalid. 
+        Returns 400 if request is invalid.
     """
     content = request.json
     if not content:
         return jsonify({"error": "Invalid request"}), 400
 
-    if 0 <= item_id < len(data['education']):
+    if 0 <= item_id < len(data["education"]):
         try:
             valid_keys = {f.name for f in fields(Education)}
             filtered_content = {k: v for k, v in content.items() if k in valid_keys}
-            data['education'][item_id] = Education(**filtered_content)
+            data["education"][item_id] = Education(**filtered_content)
             return jsonify({"message": "Education updated successfully"}), 200
         except TypeError as e:
             return jsonify({"error": f"Missing or invalid fields: {str(e)}"}), 400
@@ -383,7 +406,7 @@ def suggest_education_description(index):
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
 
-@app.route('/resume/skill', methods=['GET', 'POST'])
+@app.route("/resume/skill", methods=["GET", "POST"])
 def skill():
     """
     Handles skill data requests.
@@ -397,21 +420,30 @@ def skill():
         JSON of skill data (or empty placeholder) on GET.
         Returns 405 if method is not allowed.
     """
-    if request.method == 'GET':
-        return jsonify(data['skill']), 200
+    if request.method == "GET":
+        return jsonify(data["skill"]), 200
 
-    if request.method == 'POST':
-        try:
-            skill_data = request.get_json()
-            is_valid, error_message = validate_data('skill', skill_data)
-            if not is_valid:
-                return jsonify({"error": error_message}), 400
-            # pylint: disable=fixme
-            # TODO: Create new Skill object with skill_data
-            # TODO: Append new skill to data['skill']
-            # TODO: Return jsonify({"id": len(data['skill']) - 1}), 201
-            return jsonify({}), 201
-        except (TypeError, ValueError, KeyError):
-            return jsonify({"error": "Invalid data format"}), 400
+    if request.method == "POST":
+        skill_data = request.get_json() # Corrected variable name
 
-    return jsonify({})
+        # Basic validation, assuming Skill model requires these
+        # The validate_data utility could be enhanced for skills too
+        if not skill_data or not all(key in skill_data for key in ["name", "proficiency", "logo"]):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Assuming validate_data works for 'skill' or direct creation
+        is_valid, error_message = validate_data("skill", skill_data)
+        if not is_valid:
+            return jsonify({"error": error_message}), 400
+            
+        new_skill = Skill( # Use skill_data
+            skill_data["name"], skill_data["proficiency"], skill_data["logo"]
+        )
+        data["skill"].append(new_skill)
+        return jsonify({"id": len(data["skill"]) - 1}), 201
+
+    return jsonify({"error": "Method not allowed"}), 405
+
+
+if __name__ == "__main__":
+    app.run()
