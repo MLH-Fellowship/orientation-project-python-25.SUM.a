@@ -4,8 +4,8 @@ Flask Application
 
 from dataclasses import fields
 from flask import Flask, jsonify, request
+from spellchecker import SpellChecker
 from models import Experience, Education, Skill
-from utils import validate_data
 
 app = Flask(__name__)
 
