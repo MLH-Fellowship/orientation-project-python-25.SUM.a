@@ -477,6 +477,28 @@ def test_update_education_with_missing_fields():
     assert response.status_code == 400
     assert "error" in response.json
 
+    # Test empty payload:
+    response = client.post('/resume/education', json=empty_education)
+    assert response.status_code == 400
+    assert response.json['error'] == "No data provided"
+
+    # Test missing field:
+    response = client.post('/resume/education', json=missing_education)
+    assert response.status_code == 400
+    assert response.json['error'] == "Missing required fields"
+
+    # Test valid education:
+    response = client.post('/resume/education', json=example_education)
+    assert response.status_code == 201
+    item_id = response.json['id']
+    assert isinstance(item_id, int)
+    assert item_id == 1
+
+    # Test retrieval:
+    # TODO: The GET endpoint needs to be implemented in `app.py` for this to pass. # pylint: disable=fixme
+    response = client.get('/resume/education')
+    assert response.status_code == 200
+    assert response.json[item_id] == example_education
 
 def test_delete_education():
     """

@@ -190,26 +190,50 @@ def delete_experience(item_id):
 @app.route("/resume/education", methods=["GET", "POST"])
 def education():
     """
-    Handles education requests
+    Handles GET and POST requests for education entries.
+
+    GET: Returns all stored education entries.
+    POST: Adds a new education entry to the system after validating required fields.
+
+    Returns
+    -------
+    Response
+        JSON response containing:
+        - All education entries with status 200 (on GET).
+        - The index of the newly added entry with status 201 (on valid POST).
+        - An error message with status 400 if POST data is missing or invalid.
+        - An error message with status 405 if the HTTP method is not allowed.
     """
+    if request.method == 'POST':
+        content = request.json
+
+        # Check if the content is empty:
+        if not content:
+            return jsonify({"error": "Bad request"}), 400
+
+        # Check if all required fields are present:
+        required_fields = [
+            'course', 'school', 'start_date', 'end_date', 'grade', 'logo'
+        ]
+        if not all( key in content for key in required_fields):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Create a new Education object, add it to the data, and return the index:
+        new_education = Education(
+            content['course'],
+            content['school'],
+            content['start_date'],
+            content['end_date'],
+            content['grade'],
+            content['logo']
+        )
+        data['education'].append(new_education)
+        return jsonify({"id": len(data['education']) - 1}), 201
+
     if request.method == "GET":
         return jsonify(data["education"]), 200
 
-    if request.method == "POST":
-        try:
-            education_data = request.get_json()
-            is_valid, error_message = validate_data("education", education_data)
-            if not is_valid:
-                return jsonify({"error": error_message}), 400
-            # pylint: disable=fixme
-            # TODO: Create new Education object with education_data
-            # TODO: Append new education to data['education']
-            # TODO: Return jsonify({"id": len(data['education']) - 1}), 201
-            return jsonify({}), 201
-        except (TypeError, ValueError, KeyError):
-            return jsonify({"error": "Invalid data format"}), 400
-
-    return jsonify({})
+    return jsonify({"error": "Method not allowed"}), 405
 
 
 @app.route("/resume/education/<int:index>", methods=["GET", "DELETE"])
