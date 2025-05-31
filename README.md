@@ -4,23 +4,24 @@ Refer to the Fellowship LMS for information!
 
 ## Setup
 
-```
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+```bash
+uv venv
 ```
 
 ## Run
-```
+
+```bash
 flask run
 ```
 
 ### Run tests
-```
+
+```bash
 pytest test_pytest.py
 ```
 
 ### Run Linter
-```
-pylint *.py
+
+```bash
+ruff check .
 ```

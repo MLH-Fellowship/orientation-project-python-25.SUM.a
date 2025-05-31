@@ -144,30 +144,98 @@ def update_experience(item_id):
 
     return jsonify({"error": "Experience not found"}), 404
 
+@app.route("/resume/experience/<int:item_id>", methods=["DELETE"])
+def delete_experience(item_id):
+    """
+    Delete an experience by index.
+
+    Parameters
+    ----------
+    item_id : int
+        The index of the experience to delete.
+
+    Returns
+    -------
+    Response
+        JSON message indicating success or error.
+        Returns 404 if experience not found.
+        Returns 400 if request is invalid.
+    """
+    if item_id < 0 or item_id >= len(data["experience"]):
+        return jsonify({"error": "Invalid request"}), 400
+    data["experience"].pop(item_id)
+    return jsonify({"message": "Experience has been deleted"}), 200
+
+@app.route("/resume/experience/<int:item_id>", methods=["DELETE"])
+def delete_experience(item_id):
+    """
+    Delete an experience by index.
+
+    Parameters
+    ----------
+    item_id : int
+        The index of the experience to delete.
+
+    Returns
+    -------
+    Response
+        JSON message indicating success or error.
+        Returns 404 if experience not found.
+        Returns 400 if request is invalid.
+    """
+    if item_id < 0 or item_id >= len(data["experience"]):
+        return jsonify({"error": "Invalid request"}), 400
+    data["experience"].pop(item_id)
+    return jsonify({"message": "Experience has been deleted"}), 200
+
 
 @app.route("/resume/education", methods=["GET", "POST"])
 def education():
     """
-    Handles education requests
+    Handles GET and POST requests for education entries.
+
+    GET: Returns all stored education entries.
+    POST: Adds a new education entry to the system after validating required fields.
+
+    Returns
+    -------
+    Response
+        JSON response containing:
+        - All education entries with status 200 (on GET).
+        - The index of the newly added entry with status 201 (on valid POST).
+        - An error message with status 400 if POST data is missing or invalid.
+        - An error message with status 405 if the HTTP method is not allowed.
     """
+    if request.method == 'POST':
+        content = request.json
+
+        # Check if the content is empty:
+        if not content:
+            return jsonify({"error": "Bad request"}), 400
+
+        # Check if all required fields are present:
+        required_fields = [
+            'course', 'school', 'start_date', 'end_date', 'grade', 'logo'
+        ]
+        if not all( key in content for key in required_fields):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Create a new Education object, add it to the data, and return the index:
+        new_education = Education(
+            content['course'],
+            content['school'],
+            content['start_date'],
+            content['end_date'],
+            content['grade'],
+            content['logo']
+        )
+        data['education'].append(new_education)
+        return jsonify({"id": len(data['education']) - 1}), 201
+
     if request.method == "GET":
         return jsonify(data["education"]), 200
 
-    if request.method == "POST":
-        try:
-            education_data = request.get_json()
-            is_valid, error_message = validate_data("education", education_data)
-            if not is_valid:
-                return jsonify({"error": error_message}), 400
-            # pylint: disable=fixme
-            # TODO: Create new Education object with education_data
-            # TODO: Append new education to data['education']
-            # TODO: Return jsonify({"id": len(data['education']) - 1}), 201
-            return jsonify({}), 201
-        except (TypeError, ValueError, KeyError):
-            return jsonify({"error": "Invalid data format"}), 400
-
-    return jsonify({})
+    return jsonify({"error": "Method not allowed"}), 405
 
 
 @app.route("/resume/education/<int:index>", methods=["GET", "DELETE"])
@@ -323,6 +391,27 @@ def profile():
             return jsonify({"error": f"Invalid data format: {str(e)}"}), 400
 
     return jsonify({"error": "Method not allowed"}), 405
+@app.route("/resume/skill/<int:index>", methods=["GET"])
+def get_skill_by_index(index):
+    """
+    Get a specific skill by index
+    """
+    try:
+        skill_index = data["skill"][index]
+        return jsonify(skill_index), 200
+    except IndexError:
+        return jsonify({"error": "Skill not found"}), 404
+
+
+@app.route("/resume/skill/<int:index>", methods=["DELETE"])
+def delete_skill(index):
+    """
+    Delete specific skill by index
+    """
+    if 0 <= index < len(data["skill"]):
+        data["skill"].pop(index)
+        return jsonify({"message": "Successfully deleted skill"}), 200
+    return jsonify({"error": "Skill not found"}), 404
 
 
 if __name__ == "__main__":
