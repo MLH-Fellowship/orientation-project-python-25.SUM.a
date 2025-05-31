@@ -44,3 +44,14 @@ class Skill:
     name: str
     proficiency: str
     logo: str
+
+
+@dataclass
+class Profile:
+    """
+    Profile Class
+    """
+
+    name: str
+    email: str
+    phone: str

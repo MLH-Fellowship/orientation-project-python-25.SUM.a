@@ -4,8 +4,9 @@ Flask Application
 
 from dataclasses import fields
 from flask import Flask, jsonify, request
-from models import Experience, Education, Skill
+from models import Experience, Education, Skill, Profile
 from utils import validate_data
+import re
 
 app = Flask(__name__)
 
@@ -31,6 +32,7 @@ data = {
         )
     ],
     "skill": [Skill("Python", "1-2 Years", "example-logo.png")],
+    "profile": Profile("John Doe", "john.doe@example.com", "123-456-7890"),
 }
 
 
@@ -240,20 +242,6 @@ def skill():
     if request.method == "GET":
         return jsonify(data["skill"]), 200
 
-    # if request.method == "POST":
-    #     try:
-    #         skill_data = request.get_json()
-    #         is_valid, error_message = validate_data("skill", skill_data)
-    #         if not is_valid:
-    #             return jsonify({"error": error_message}), 400
-    #         # pylint: disable=fixme
-    #         # TODO: Create new Skill object with skill_data
-    #         # TODO: Append new skill to data['skill']
-    #         # TODO: Return jsonify({"id": len(data['skill']) - 1}), 201
-    #         return jsonify({}), 201
-    #     except (TypeError, ValueError, KeyError):
-    #         return jsonify({"error": "Invalid data format"}), 400
-
     if request.method == "POST":
         experience_data = request.get_json()
 
@@ -266,6 +254,73 @@ def skill():
             )
         )
         return jsonify({"id": len(data["skill"]) - 1}), 201
+
+    return jsonify({"error": "Method not allowed"}), 405
+
+
+@app.route("/resume/profile", methods=["GET", "POST", "PUT"])
+def profile():
+    """
+    Handle profile data requests.
+
+    GET: Returns stored profile information
+    POST/PUT: Creates or updates profile information
+
+    Returns
+    -------
+    Response
+        JSON of profile data on GET, or success message on POST/PUT
+        Returns 400 if validation fails
+    """
+    if request.method == "GET":
+        if not data["profile"]:
+            return jsonify({}), 404
+        return jsonify(data["profile"])
+
+    if request.method in ["POST", "PUT"]:
+        try:
+            profile_data = request.get_json()
+
+            # Validate required fields
+            if not all(key in profile_data for key in ["name", "email", "phone"]):
+                return jsonify({"error": "Missing required fields"}), 400
+
+            # Validate email format
+            email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+            if not re.match(email_pattern, profile_data["email"]):
+                return jsonify({"error": "Invalid email format"}), 400
+
+            # Validate phone has international country code (starts with +)
+            if not profile_data["phone"].startswith("+"):
+                return (
+                    jsonify(
+                        {
+                            "error": "Phone must include international country code (start with +)"
+                        }
+                    ),
+                    400,
+                )
+
+            # Create or update profile
+
+            # For PUT requests, update only the provided fields
+            if request.method == "PUT" and data["profile"]:
+                current_profile = data["profile"]
+                name = profile_data.get("name", current_profile.name)
+                email = profile_data.get("email", current_profile.email)
+                phone = profile_data.get("phone", current_profile.phone)
+                data["profile"] = Profile(name, email, phone)
+            else:
+                # For POST or when profile doesn't exist yet
+                data["profile"] = Profile(
+                    profile_data["name"], profile_data["email"], profile_data["phone"]
+                )
+
+            status_code = 201 if request.method == "POST" else 200
+            return jsonify({"message": "Profile updated successfully"}), status_code
+
+        except (TypeError, ValueError, KeyError) as e:
+            return jsonify({"error": f"Invalid data format: {str(e)}"}), 400
 
     return jsonify({"error": "Method not allowed"}), 405
 
